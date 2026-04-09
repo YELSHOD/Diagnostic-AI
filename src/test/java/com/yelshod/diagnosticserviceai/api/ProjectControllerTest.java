@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.yelshod.diagnosticserviceai.docker.DockerContainerService;
+import com.yelshod.diagnosticserviceai.security.JwtAuthenticationFilter;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,9 @@ class ProjectControllerTest {
 
     @MockBean
     private DockerContainerService dockerContainerService;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void returnsVisibleProjectContainers() throws Exception {

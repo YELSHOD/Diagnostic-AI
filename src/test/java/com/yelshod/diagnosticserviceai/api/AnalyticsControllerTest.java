@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.yelshod.diagnosticserviceai.analytics.AnalyticsResponse;
 import com.yelshod.diagnosticserviceai.analytics.AnalyticsService;
+import com.yelshod.diagnosticserviceai.security.JwtAuthenticationFilter;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class AnalyticsControllerTest {
 
     @MockBean
     private AnalyticsService analyticsService;
+
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     void returnsAnalyticsPayloadForExplicitWindow() throws Exception {
