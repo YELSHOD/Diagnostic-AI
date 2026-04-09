@@ -10,3 +10,9 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+
+auth:
+  jwt:
+    secret: test-jwt-secret-key-for-postgres-tests-123456
+    access-token-ttl: PT15M
+    refresh-token-ttl: P7D

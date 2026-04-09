@@ -9,3 +9,9 @@ spring:
       ddl-auto: none
   flyway:
     enabled: false
+
+auth:
+  jwt:
+    secret: test-jwt-secret-key-for-context-loading-123456
+    access-token-ttl: PT15M
+    refresh-token-ttl: P7D
