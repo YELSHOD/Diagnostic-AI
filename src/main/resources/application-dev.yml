@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:diagnostic_ai}}
+    username: ${DB_USER:diagnostic}
+    password: ${DB_PASSWORD:diagnostic}
+
+app:
+  docker:
+    project-label: ${DOCKER_PROJECT_LABEL:ai.project.env}
+    project-label-value: ${DOCKER_PROJECT_LABEL_VALUE:demo}
+    logs-tail: ${DOCKER_LOGS_TAIL:200}

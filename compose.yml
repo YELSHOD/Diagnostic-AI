@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: diagnosticserviceai-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-diagnostic_ai}
+      POSTGRES_USER: ${DB_USER:-diagnostic}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-diagnostic}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - diagnosticserviceai_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-diagnostic} -d ${DB_NAME:-diagnostic_ai}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    profiles: ["full"]
+    build:
+      context: .
+    container_name: diagnosticserviceai-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-diagnostic_ai}
+      DB_USER: ${DB_USER:-diagnostic}
+      DB_PASSWORD: ${DB_PASSWORD:-diagnostic}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_PROMPT_VERSION: ${GEMINI_PROMPT_VERSION:-v1}
+      DOCKER_PROJECT_LABEL: ${DOCKER_PROJECT_LABEL:-ai.project.env}
+      DOCKER_PROJECT_LABEL_VALUE: ${DOCKER_PROJECT_LABEL_VALUE:-demo}
+      DOCKER_LOGS_TAIL: ${DOCKER_LOGS_TAIL:-200}
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    restart: unless-stopped
+
+volumes:
+  diagnosticserviceai_postgres_data:
