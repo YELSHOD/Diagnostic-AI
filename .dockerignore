@@ -1,0 +1,12 @@
+.git
+.gradle
+.idea
+build/reports
+build/test-results
+docs
+src
+gradle
+gradlew
+gradlew.bat
+HELP.md
+DiagnosticServiceAI.iml

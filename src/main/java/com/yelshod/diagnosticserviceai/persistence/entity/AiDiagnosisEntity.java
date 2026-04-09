@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -30,6 +32,7 @@ public class AiDiagnosisEntity {
     @Column(name = "prompt_version", nullable = false)
     private String promptVersion;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "diagnosis_json", nullable = false, columnDefinition = "jsonb")
     private String diagnosisJson;
 
