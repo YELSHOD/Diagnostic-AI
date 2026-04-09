@@ -1,5 +1,32 @@
 # Auth And Account Plan
 
+## Current Status
+
+Completed backend work:
+- `Task 1` done: security dependencies added
+- `Task 2` done: `SecurityConfig`, `JwtService`, base auth package structure added
+- `Task 3` done: `V2__auth_init.sql` added with `users`, `roles`, `user_roles`, `refresh_tokens`
+- `Task 4` done: `UserEntity`, `RoleEntity`, `RefreshTokenEntity` and repositories added
+- `Task 5` done: auth/account DTOs and validation added
+- `Task 6` done: `register`, `login`, `refresh`, `logout` implemented
+- `Task 8` done: `GET /api/auth/me`, `GET /api/account`, `PATCH /api/account`, `PATCH /api/account/password` implemented
+- route protection baseline is active through JWT authentication filter
+- tests for auth/account layer are added and `./gradlew test` is green
+
+Completed backend commits:
+- `1d0a427` `feat: add auth security foundation and schema`
+- `96fe432` `feat: add auth entities and repositories`
+- `c7d9d78` `feat: add auth request and response models`
+- `00affd0` `feat: implement auth service and controller`
+- `caccaf1` `feat: add current-user account endpoints`
+
+Remaining backend work:
+- tighten `401` behavior for unauthorized access cases and add explicit security integration tests
+- add repository integration tests for `users` and `refresh_tokens`
+- decide whether to rotate and hash refresh tokens exactly as-is or introduce a dedicated refresh token service
+- add websocket JWT protection for log streaming
+- after backend auth stabilizes, connect frontend login/register/account flow
+
 ## Goal
 Add a first real authentication layer to `DiagnosticServiceAI`, then connect the frontend to it so the product has:
 - registration
@@ -110,6 +137,8 @@ Validation:
 - role code validation
 
 ### Task 6: Implement register
+Status:
+- completed
 Endpoint:
 - `POST /api/auth/register`
 
@@ -120,6 +149,8 @@ Behavior:
 - return tokens + user summary
 
 ### Task 7: Implement login/refresh/logout
+Status:
+- completed
 Endpoints:
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
@@ -131,6 +162,8 @@ Behavior:
 - revoke refresh token on logout
 
 ### Task 8: Implement current user and account
+Status:
+- completed
 Endpoints:
 - `GET /api/auth/me`
 - `GET /api/account`
@@ -150,6 +183,8 @@ Verification for Phase 3:
 ## Phase 4: Backend Security Rules
 
 ### Task 9: Protect routes
+Status:
+- partially completed
 Public:
 - `/api/auth/register`
 - `/api/auth/login`
@@ -179,6 +214,8 @@ Optional first checks:
 ## Phase 5: Backend Test Coverage
 
 ### Task 11: Add auth tests
+Status:
+- partially completed
 New tests:
 - `JwtServiceTest`
 - `AuthServiceTest`
@@ -194,6 +231,8 @@ Verification:
 ## Phase 6: Frontend Auth Foundation
 
 ### Task 12: Add frontend auth state
+Status:
+- next
 Frontend project:
 - `diagnostic-ai-front`
 
@@ -210,6 +249,8 @@ New responsibilities:
 - clear session on invalid refresh
 
 ### Task 13: Add auth routes and pages
+Status:
+- next
 New pages:
 - `LoginPage`
 - `RegisterPage`
@@ -222,6 +263,8 @@ Register form fields:
 - selected role
 
 ### Task 14: Protect frontend routes
+Status:
+- next
 Public:
 - login
 - register
@@ -236,6 +279,8 @@ Behavior:
 ## Phase 7: Frontend Profile Integration
 
 ### Task 15: Replace placeholder profile actions
+Status:
+- next
 Profile dropdown should show:
 - user display name
 - role
@@ -248,6 +293,8 @@ Actions:
 `Settings` stays as a technical app settings page, but user identity goes to `Account`.
 
 ### Task 16: Connect account page
+Status:
+- next
 Account page should support:
 - reading current profile
 - updating visible account fields
@@ -256,6 +303,8 @@ Account page should support:
 ## Phase 8: WebSocket Auth
 
 ### Task 17: Protect websocket stream
+Status:
+- next
 Add JWT validation to websocket connection flow.
 
 Options:
