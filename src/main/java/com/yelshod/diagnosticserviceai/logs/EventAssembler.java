@@ -1,6 +1,5 @@
 package com.yelshod.diagnosticserviceai.logs;
 
-import jakarta.annotation.PreDestroy;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -9,10 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,12 +22,8 @@ public class EventAssembler {
     private static final int MAX_NON_STACK_LINES = 8;
     private static final Pattern EXCEPTION_PATTERN = Pattern.compile("([\\w.$]+(?:Exception|Error))");
 
+    private final EventAssemblyTimeoutScheduler timeoutScheduler;
     private final Map<String, State> states = new HashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "event-assembler-timeout");
-        t.setDaemon(true);
-        return t;
-    });
 
     public synchronized Optional<ErrorEvent> process(ParsedLogLine line, Consumer<ErrorEvent> timeoutConsumer) {
         State state = states.computeIfAbsent(line.service(), key -> new State());
@@ -91,20 +82,15 @@ public class EventAssembler {
 
     private void rescheduleTimeout(State state, String service, Consumer<ErrorEvent> timeoutConsumer) {
         cancelTimeout(state);
-        state.future = scheduler.schedule(() ->
-                flushServiceInternal(service).ifPresent(timeoutConsumer), 1500, TimeUnit.MILLISECONDS);
+        state.future = timeoutScheduler.schedule(service, () ->
+                flushServiceInternal(service).ifPresent(timeoutConsumer));
     }
 
     private void cancelTimeout(State state) {
         if (state.future != null) {
-            state.future.cancel(false);
+            state.future.cancel();
             state.future = null;
         }
-    }
-
-    @PreDestroy
-    void shutdown() {
-        scheduler.shutdownNow();
     }
 
     private boolean isEventStart(String line) {
@@ -123,7 +109,7 @@ public class EventAssembler {
     private static final class State {
         private final Deque<String> context = new ArrayDeque<>();
         private Draft current;
-        private ScheduledFuture<?> future;
+        private EventAssemblyTimeoutScheduler.Cancellable future;
 
         private void pushContext(String line) {
             context.addLast(line);
