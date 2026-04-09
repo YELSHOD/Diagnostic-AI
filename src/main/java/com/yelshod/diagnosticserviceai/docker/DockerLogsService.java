@@ -6,7 +6,6 @@ import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.StreamType;
 import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.yelshod.diagnosticserviceai.config.AppProperties;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +17,7 @@ public class DockerLogsService {
 
     private final DockerClient dockerClient;
     private final AppProperties appProperties;
+    private final DockerFrameLogSplitter dockerFrameLogSplitter;
 
     public DockerLogSession streamLogs(String containerId, Consumer<DockerLogLine> consumer) {
         String service = resolveServiceName(containerId);
@@ -25,11 +25,8 @@ public class DockerLogsService {
             @Override
             public void onNext(Frame frame) {
                 if (frame.getStreamType() == StreamType.STDOUT || frame.getStreamType() == StreamType.STDERR) {
-                    String text = new String(frame.getPayload(), StandardCharsets.UTF_8);
-                    for (String line : text.split("\\R")) {
-                        if (!line.isBlank()) {
-                            consumer.accept(new DockerLogLine(service, line));
-                        }
+                    for (String line : dockerFrameLogSplitter.split(frame.getPayload())) {
+                        consumer.accept(new DockerLogLine(service, line));
                     }
                 }
                 super.onNext(frame);
