@@ -1,15 +1,10 @@
-package com.yelshod.diagnosticserviceai.api;
+package com.yelshod.diagnosticserviceai.runtime;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.yelshod.diagnosticserviceai.runtime.LogSourceType;
-import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetDto;
-import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetService;
-import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetStatus;
-import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetType;
 import com.yelshod.diagnosticserviceai.security.JwtAuthenticationFilter;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +15,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(ProjectController.class)
+@WebMvcTest(RuntimeTargetController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class ProjectControllerTest {
+class RuntimeTargetControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -34,29 +29,25 @@ class ProjectControllerTest {
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
-    void returnsVisibleProjectContainers() throws Exception {
+    void returnsUnifiedRuntimeTargets() throws Exception {
         when(runtimeTargetService.listRuntimeTargets()).thenReturn(List.of(
                 new RuntimeTargetDto(
-                        "id-1",
+                        "docker-orders",
                         "orders",
                         RuntimeTargetType.DOCKER_CONTAINER,
                         RuntimeTargetStatus.UP,
                         "localhost",
                         8081,
-                        null,
+                        "http://localhost:8081/actuator/health",
                         LogSourceType.DOCKER,
-                        "id-1",
-                        Map.of(
-                                "env", "demo",
-                                "image", "orders:latest",
-                                "dockerStatus", "Up",
-                                "createdAt", "2026-04-09T10:00:00Z"))));
+                        "docker-orders",
+                        Map.of("image", "orders:latest"))));
 
-        mockMvc.perform(get("/api/projects"))
+        mockMvc.perform(get("/api/runtime-targets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].containerId").value("id-1"))
-                .andExpect(jsonPath("$[0].name").value("orders"))
-                .andExpect(jsonPath("$[0].image").value("orders:latest"))
-                .andExpect(jsonPath("$[0].labels.env").value("demo"));
+                .andExpect(jsonPath("$[0].id").value("docker-orders"))
+                .andExpect(jsonPath("$[0].type").value("DOCKER_CONTAINER"))
+                .andExpect(jsonPath("$[0].status").value("UP"))
+                .andExpect(jsonPath("$[0].logSourceType").value("DOCKER"));
     }
 }
