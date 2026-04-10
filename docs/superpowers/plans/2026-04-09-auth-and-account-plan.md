@@ -16,6 +16,18 @@ Completed backend work:
 - route protection baseline is active through JWT authentication filter
 - tests for auth/account layer are added and `./gradlew test` is green
 
+Latest backend runtime stabilization:
+- containerized backend now mounts Docker socket through `compose.yml`
+- `DOCKER_HOST` is explicitly wired for Docker runtime
+- Docker Java transport was switched to `docker-java-transport-zerodep` so the app container can inspect Docker over unix socket
+- security now permits `ERROR` dispatch and `/error`, so backend runtime failures are no longer masked as false `401`
+- Docker discovery/log services now return explicit `503 Service Unavailable` when Docker is unavailable and log the root cause
+- live verification against the running Dockerized backend confirmed:
+  - `GET /actuator/health` returns `200`
+  - authenticated `GET /api/analytics` returns `200`
+  - authenticated `GET /api/projects` now returns `200` in Docker runtime
+- if `/api/projects` returns an empty list, the remaining issue is not auth but Docker label filtering, e.g. containers do not match `ai.project.env=demo`
+
 Completed backend commits:
 - `1d0a427` `feat: add auth security foundation and schema`
 - `96fe432` `feat: add auth entities and repositories`
@@ -24,9 +36,11 @@ Completed backend commits:
 - `caccaf1` `feat: add current-user account endpoints`
 - `2ece559` `test: harden auth security and repository coverage`
 - `2aa81a4` `feat: protect websocket log stream with jwt`
+- `6acd452` `fix: restore container discovery in docker runtime`
 
 Remaining backend work:
 - decide whether to rotate and hash refresh tokens exactly as-is or introduce a dedicated refresh token service
+- if live logs or project list are empty, align running containers with configured Docker labels
 - after backend auth stabilizes, connect frontend login/register/account flow
 
 ## Goal
@@ -203,6 +217,7 @@ Protected:
 Verification:
 - unauthorized requests return `401`
 - valid token reaches secured endpoints
+- runtime errors behind secured routes surface as real HTTP error codes instead of being collapsed into `401`
 
 ### Task 10: Add role awareness
 Keep authorization simple in this wave:
@@ -229,6 +244,7 @@ New tests:
 
 Verification:
 - `./gradlew test`
+- note: some Spring/Postgres integration tests remain environment-sensitive because they require reachable PostgreSQL during the test runtime
 
 ## Phase 6: Frontend Auth Foundation
 
