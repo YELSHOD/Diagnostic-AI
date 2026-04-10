@@ -18,15 +18,21 @@ public class LogsWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        String containerId = UriComponentsBuilder.fromUri(session.getUri())
+        String runtimeTargetId = UriComponentsBuilder.fromUri(session.getUri())
                 .build()
                 .getQueryParams()
-                .getFirst("containerId");
-        if (containerId == null || containerId.isBlank()) {
+                .getFirst("runtimeTargetId");
+        if (runtimeTargetId == null || runtimeTargetId.isBlank()) {
+            runtimeTargetId = UriComponentsBuilder.fromUri(session.getUri())
+                    .build()
+                    .getQueryParams()
+                    .getFirst("containerId");
+        }
+        if (runtimeTargetId == null || runtimeTargetId.isBlank()) {
             closeQuietly(session, CloseStatus.BAD_DATA);
             return;
         }
-        logStreamSessionService.open(session.getId(), containerId, session);
+        logStreamSessionService.open(session.getId(), runtimeTargetId, session);
     }
 
     @Override

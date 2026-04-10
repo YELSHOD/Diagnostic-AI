@@ -6,9 +6,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.yelshod.diagnosticserviceai.docker.DockerLogLine;
-import com.yelshod.diagnosticserviceai.docker.DockerLogSession;
-import com.yelshod.diagnosticserviceai.docker.DockerLogsService;
+import com.yelshod.diagnosticserviceai.logsource.LogSourceRouter;
+import com.yelshod.diagnosticserviceai.logsource.LogSourceSession;
 import com.yelshod.diagnosticserviceai.logs.LogProcessingService;
+import com.yelshod.diagnosticserviceai.runtime.LogSourceType;
+import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetDto;
+import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetService;
+import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetStatus;
+import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetType;
 import java.time.Instant;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -23,7 +28,10 @@ import org.springframework.web.socket.WebSocketSession;
 class LogStreamSessionServiceTest {
 
     @Mock
-    private DockerLogsService dockerLogsService;
+    private RuntimeTargetService runtimeTargetService;
+
+    @Mock
+    private LogSourceRouter logSourceRouter;
 
     @Mock
     private LogProcessingService logProcessingService;
@@ -36,8 +44,21 @@ class LogStreamSessionServiceTest {
 
     @Test
     void sendsTransformedLogMessageForIncomingDockerLine() {
-        DockerLogSession dockerLogSession = () -> { };
-        when(dockerLogsService.streamLogs(eq("container-1"), any())).thenReturn(dockerLogSession);
+        LogSourceSession logSourceSession = () -> { };
+        RuntimeTargetDto runtimeTarget = new RuntimeTargetDto(
+                "container-1",
+                "orders",
+                RuntimeTargetType.DOCKER_CONTAINER,
+                RuntimeTargetStatus.UP,
+                "localhost",
+                8081,
+                null,
+                LogSourceType.DOCKER,
+                "container-1",
+                Map.of()
+        );
+        when(runtimeTargetService.findRequiredTarget("container-1")).thenReturn(runtimeTarget);
+        when(logSourceRouter.open(eq(runtimeTarget), any())).thenReturn(logSourceSession);
 
         WsMessage logMessage = new WsMessage(
                 "LOG_LINE",
@@ -46,12 +67,12 @@ class LogStreamSessionServiceTest {
                 Map.of("message", "hello"));
         when(logProcessingService.toLogMessage(new DockerLogLine("orders", "hello"))).thenReturn(logMessage);
 
-        LogStreamSessionService service = new LogStreamSessionService(dockerLogsService, logProcessingService, wsMessageSender);
+        LogStreamSessionService service = new LogStreamSessionService(runtimeTargetService, logSourceRouter, logProcessingService, wsMessageSender);
         service.open("session-1", "container-1", session);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Consumer<DockerLogLine>> captor = ArgumentCaptor.forClass(Consumer.class);
-        verify(dockerLogsService).streamLogs(eq("container-1"), captor.capture());
+        verify(logSourceRouter).open(eq(runtimeTarget), captor.capture());
         captor.getValue().accept(new DockerLogLine("orders", "hello"));
 
         verify(wsMessageSender).send(session, logMessage);

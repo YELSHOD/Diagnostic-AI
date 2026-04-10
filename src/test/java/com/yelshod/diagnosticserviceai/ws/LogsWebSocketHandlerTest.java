@@ -26,7 +26,7 @@ class LogsWebSocketHandlerTest {
 
     @Test
     void delegatesValidSubscriptionToSessionService() {
-        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws/logs?containerId=abc123"));
+        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws/logs?runtimeTargetId=abc123"));
         when(session.getId()).thenReturn("session-1");
 
         logsWebSocketHandler.afterConnectionEstablished(session);
