@@ -10,6 +10,9 @@ Completed backend work:
 - `Task 5` done: auth/account DTOs and validation added
 - `Task 6` done: `register`, `login`, `refresh`, `logout` implemented
 - `Task 8` done: `GET /api/auth/me`, `GET /api/account`, `PATCH /api/account`, `PATCH /api/account/password` implemented
+- `Task 9` done: protected REST routes now return explicit `401` for unauthenticated requests
+- `Task 11` done: auth security integration tests and repository integration tests added
+- `Task 17` done: websocket log stream handshake is protected by JWT
 - route protection baseline is active through JWT authentication filter
 - tests for auth/account layer are added and `./gradlew test` is green
 
@@ -19,12 +22,11 @@ Completed backend commits:
 - `c7d9d78` `feat: add auth request and response models`
 - `00affd0` `feat: implement auth service and controller`
 - `caccaf1` `feat: add current-user account endpoints`
+- `2ece559` `test: harden auth security and repository coverage`
+- `2aa81a4` `feat: protect websocket log stream with jwt`
 
 Remaining backend work:
-- tighten `401` behavior for unauthorized access cases and add explicit security integration tests
-- add repository integration tests for `users` and `refresh_tokens`
 - decide whether to rotate and hash refresh tokens exactly as-is or introduce a dedicated refresh token service
-- add websocket JWT protection for log streaming
 - after backend auth stabilizes, connect frontend login/register/account flow
 
 ## Goal
@@ -184,7 +186,7 @@ Verification for Phase 3:
 
 ### Task 9: Protect routes
 Status:
-- partially completed
+- completed
 Public:
 - `/api/auth/register`
 - `/api/auth/login`
@@ -215,7 +217,7 @@ Optional first checks:
 
 ### Task 11: Add auth tests
 Status:
-- partially completed
+- completed
 New tests:
 - `JwtServiceTest`
 - `AuthServiceTest`
@@ -304,7 +306,7 @@ Account page should support:
 
 ### Task 17: Protect websocket stream
 Status:
-- next
+- completed
 Add JWT validation to websocket connection flow.
 
 Options:
