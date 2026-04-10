@@ -41,3 +41,11 @@ app:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-2.5-flash}
     prompt-version: ${GEMINI_PROMPT_VERSION:v1}
+  runtime:
+    default-local-targets:
+      - name: diagnosticserviceai
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ./logs/diagnosticserviceai.log

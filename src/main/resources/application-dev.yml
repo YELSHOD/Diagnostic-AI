@@ -12,3 +12,11 @@ app:
     project-label: ${DOCKER_PROJECT_LABEL:ai.project.env}
     project-label-value: ${DOCKER_PROJECT_LABEL_VALUE:demo}
     logs-tail: ${DOCKER_LOGS_TAIL:200}
+  runtime:
+    default-local-targets:
+      - name: diagnostic-ai-front
+        host: localhost
+        port: 5173
+        health-url: http://localhost:5173
+        log-source-type: FILE_TAIL
+        log-source-ref: ./logs/diagnostic-ai-front.log
