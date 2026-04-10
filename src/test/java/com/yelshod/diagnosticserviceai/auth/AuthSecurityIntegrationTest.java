@@ -88,6 +88,37 @@ class AuthSecurityIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void allowsCorsPreflightForPublicRegisterEndpointFromLanOrigin() throws Exception {
+        mockMvc.perform(options("/api/auth/register")
+                        .header("Origin", "http://192.168.1.25:5173")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://192.168.1.25:5173"))
+                .andExpect(header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("POST")));
+    }
+
+    @Test
+    void includesCorsHeadersOnActualPublicRegisterResponse() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .header("Origin", "http://localhost:5173")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "new-user@example.com",
+                                  "username": "new.user",
+                                  "password": "strong-pass",
+                                  "role": "BACKEND"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.refreshToken").isString())
+                .andExpect(jsonPath("$.user.email").value("new-user@example.com"));
+    }
+
+    @Test
     void allowsProtectedAccountEndpointWithValidBearerToken() throws Exception {
         UserEntity user = createUser("user@example.com", "dev.user");
         String accessToken = jwtService.generateAccessToken(user.getId().toString(), Map.of(
