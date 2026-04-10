@@ -7,7 +7,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.BDDMockito.given;
 
+import com.yelshod.diagnosticserviceai.api.ProjectContainerDto;
+import com.yelshod.diagnosticserviceai.docker.DockerContainerService;
 import com.yelshod.diagnosticserviceai.persistence.entity.RoleEntity;
 import com.yelshod.diagnosticserviceai.persistence.entity.UserEntity;
 import com.yelshod.diagnosticserviceai.persistence.repository.RefreshTokenRepository;
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -45,6 +49,9 @@ class AuthSecurityIntegrationTest extends PostgresIntegrationTest {
 
     @Autowired
     private JwtService jwtService;
+
+    @MockBean
+    private DockerContainerService dockerContainerService;
 
     @BeforeEach
     void cleanDatabase() {
@@ -132,6 +139,41 @@ class AuthSecurityIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(jsonPath("$.email").value("user@example.com"))
                 .andExpect(jsonPath("$.username").value("dev.user"))
                 .andExpect(jsonPath("$.roles[0]").value("BACKEND"));
+    }
+
+    @Test
+    void allowsProtectedProjectsEndpointWithValidBearerToken() throws Exception {
+        UserEntity user = createUser("user@example.com", "dev.user");
+        String accessToken = jwtService.generateAccessToken(user.getId().toString(), Map.of(
+                "email", user.getEmail(),
+                "username", user.getUsername(),
+                "roles", Set.of("BACKEND")));
+        given(dockerContainerService.listDemoProjectContainers()).willReturn(java.util.List.of(
+                new ProjectContainerDto("id-1", "demo-service", "demo:latest", "Up", Instant.parse("2026-04-10T08:00:00Z"), Map.of())
+        ));
+
+        mockMvc.perform(get("/api/projects")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("demo-service"));
+    }
+
+    @Test
+    void allowsPublicRegisterEndpointEvenWhenBearerTokenIsMalformed() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .header("Authorization", "Bearer definitely-not-a-jwt")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "fresh-user@example.com",
+                                  "username": "fresh.user",
+                                  "password": "strong-pass",
+                                  "role": "BACKEND"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isString())
+                .andExpect(jsonPath("$.user.email").value("fresh-user@example.com"));
     }
 
     private UserEntity createUser(String email, String username) {

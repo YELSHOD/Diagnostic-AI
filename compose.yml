@@ -28,6 +28,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: ${SERVER_PORT:-8080}
+      DOCKER_HOST: ${DOCKER_HOST:-unix:///var/run/docker.sock}
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-diagnostic_ai}
       DB_USER: ${DB_USER:-diagnostic}
@@ -40,6 +41,8 @@ services:
       DOCKER_LOGS_TAIL: ${DOCKER_LOGS_TAIL:-200}
     ports:
       - "${SERVER_PORT:-8080}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
 volumes:

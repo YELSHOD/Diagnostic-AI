@@ -11,9 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class DockerContainerService {
 
@@ -21,17 +25,26 @@ public class DockerContainerService {
     private final AppProperties appProperties;
 
     public List<ProjectContainerDto> listDemoProjectContainers() {
-        String labelName = appProperties.docker().projectLabel();
-        String labelValue = appProperties.docker().projectLabelValue();
+        try {
+            String labelName = appProperties.docker().projectLabel();
+            String labelValue = appProperties.docker().projectLabelValue();
 
-        List<Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
-        return containers.stream()
-                .filter(container -> {
-                    Map<String, String> labels = container.getLabels();
-                    return labels != null && labelValue.equals(labels.get(labelName));
-                })
-                .map(this::toDto)
-                .collect(Collectors.toList());
+            List<Container> containers = dockerClient.listContainersCmd().withShowAll(true).exec();
+            return containers.stream()
+                    .filter(container -> {
+                        Map<String, String> labels = container.getLabels();
+                        return labels != null && labelValue.equals(labels.get(labelName));
+                    })
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+        } catch (RuntimeException ex) {
+            log.error("Docker container discovery failed", ex);
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Docker daemon is unavailable for container discovery",
+                    ex
+            );
+        }
     }
 
     private ProjectContainerDto toDto(Container container) {

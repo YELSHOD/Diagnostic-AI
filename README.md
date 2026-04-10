@@ -12,6 +12,7 @@ cp .env.example .env
 
 Fill in the values you need on the current device:
 - PostgreSQL host/port/user/password
+- `DOCKER_HOST` if your machine uses a non-default Docker socket path
 - `GEMINI_API_KEY` from Google AI Studio if you want AI diagnosis enabled
 - any local Docker label settings you use for project discovery
 
@@ -52,6 +53,8 @@ To run both PostgreSQL and the backend in containers:
 ```bash
 docker compose --profile full up --build
 ```
+
+The app container mounts `/var/run/docker.sock` and defaults `DOCKER_HOST` to `unix:///var/run/docker.sock`, so `/api/projects` and live logs can inspect local Docker containers from inside the backend container.
 
 ## Profile Split
 

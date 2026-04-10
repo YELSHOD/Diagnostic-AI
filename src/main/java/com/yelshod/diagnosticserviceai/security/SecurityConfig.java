@@ -1,6 +1,7 @@
 package com.yelshod.diagnosticserviceai.security;
 
 import com.yelshod.diagnosticserviceai.auth.JwtProperties;
+import jakarta.servlet.DispatcherType;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -41,8 +42,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(authenticationEntryPoint()))
                 .authorizeHttpRequests(registry -> registry
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/actuator/health")
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/actuator/health", "/error")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
