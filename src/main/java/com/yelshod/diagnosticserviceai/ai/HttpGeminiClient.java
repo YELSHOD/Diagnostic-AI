@@ -23,17 +23,23 @@ public class HttpGeminiClient implements GeminiClient {
                 .baseUrl("https://generativelanguage.googleapis.com")
                 .build();
 
-        JsonNode response = client.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/v1beta/models/{model}:generateContent")
-                        .queryParam("key", appProperties.gemini().apiKey())
-                        .build(model))
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(diagnosisPromptFactory.buildRequestPayload(prompt))
-                .retrieve()
-                .body(JsonNode.class);
+        try {
+            JsonNode response = client.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/v1beta/models/{model}:generateContent")
+                            .queryParam("key", appProperties.gemini().apiKey())
+                            .build(model))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(diagnosisPromptFactory.buildRequestPayload(prompt))
+                    .retrieve()
+                    .body(JsonNode.class);
 
-        return extractModelText(response);
+            return extractModelText(response);
+        } catch (AiDiagnosisProviderException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new AiDiagnosisProviderException("Gemini request failed", ex);
+        }
     }
 
     private String extractModelText(JsonNode response) {
