@@ -28,14 +28,14 @@ app:
         log-source-ref: ${APP_LOG_FILE:./logs/diagnosticserviceai.log}
       - name: orders-demo
         host: localhost
-        port: 8080
-        health-url: http://localhost:8080/actuator/health
+        port: 8081
+        health-url:
         log-source-type: FILE_TAIL
         log-source-ref: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
       - name: restaurant-demo
         host: localhost
-        port: 8080
-        health-url: http://localhost:8080/actuator/health
+        port: 8082
+        health-url:
         log-source-type: FILE_TAIL
         log-source-ref: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}
   demo:
