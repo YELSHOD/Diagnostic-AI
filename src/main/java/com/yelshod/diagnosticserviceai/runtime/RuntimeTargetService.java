@@ -7,11 +7,13 @@ import java.util.UUID;
 import java.time.Clock;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class RuntimeTargetService {
 
@@ -20,17 +22,22 @@ public class RuntimeTargetService {
     private final Clock clock;
 
     public List<RuntimeTargetDto> listRuntimeTargets() {
-        return discoveryServices.stream()
+        List<RuntimeTargetDto> targets = discoveryServices.stream()
                 .flatMap(service -> service.discover().stream())
                 .sorted(Comparator.comparing(RuntimeTargetDto::id))
                 .toList();
+        log.debug("Runtime targets listed count={}", targets.size());
+        return targets;
     }
 
     public RuntimeTargetDto findRequiredTarget(String runtimeTargetId) {
         return listRuntimeTargets().stream()
                 .filter(target -> target.id().equals(runtimeTargetId))
                 .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Runtime target not found: " + runtimeTargetId));
+                .orElseThrow(() -> {
+                    log.warn("Runtime target lookup failed id={}", runtimeTargetId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Runtime target not found: " + runtimeTargetId);
+                });
     }
 
     public RuntimeTargetDto createLocalService(UpsertRuntimeTargetRequest request) {
@@ -48,7 +55,10 @@ public class RuntimeTargetService {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
-        return toDto(runtimeTargetRepository.save(entity));
+        RuntimeTargetEntity savedEntity = runtimeTargetRepository.save(entity);
+        log.info("Runtime target created id={} name={} type={}",
+                savedEntity.getId(), savedEntity.getName(), savedEntity.getType());
+        return toDto(savedEntity);
     }
 
     public RuntimeTargetDto updateLocalService(String runtimeTargetId, UpsertRuntimeTargetRequest request) {
@@ -61,18 +71,26 @@ public class RuntimeTargetService {
         entity.setLogSourceRef(request.logSourceRef());
         entity.setEnabled(request.enabled());
         entity.setUpdatedAt(clock.instant());
-        return toDto(runtimeTargetRepository.save(entity));
+        RuntimeTargetEntity savedEntity = runtimeTargetRepository.save(entity);
+        log.info("Runtime target updated id={} name={} enabled={}",
+                savedEntity.getId(), savedEntity.getName(), savedEntity.isEnabled());
+        return toDto(savedEntity);
     }
 
     public void deleteLocalService(String runtimeTargetId) {
         RuntimeTargetEntity entity = loadLocalService(runtimeTargetId);
         runtimeTargetRepository.deleteById(entity.getId());
+        log.info("Runtime target deleted id={} name={}", entity.getId(), entity.getName());
     }
 
     private RuntimeTargetEntity loadLocalService(String runtimeTargetId) {
         RuntimeTargetEntity entity = runtimeTargetRepository.findById(parseUuid(runtimeTargetId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Runtime target not found: " + runtimeTargetId));
+                .orElseThrow(() -> {
+                    log.warn("Runtime target lookup failed id={}", runtimeTargetId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Runtime target not found: " + runtimeTargetId);
+                });
         if (entity.getType() != RuntimeTargetType.LOCAL_SERVICE) {
+            log.warn("Runtime target modification rejected id={} type={}", runtimeTargetId, entity.getType());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only local service targets can be modified");
         }
         return entity;
@@ -82,6 +100,7 @@ public class RuntimeTargetService {
         try {
             return UUID.fromString(runtimeTargetId);
         } catch (IllegalArgumentException ex) {
+            log.warn("Runtime target id rejected invalid-format id={}", runtimeTargetId);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Runtime target not found: " + runtimeTargetId);
         }
     }

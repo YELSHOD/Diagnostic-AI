@@ -3,6 +3,7 @@ package com.yelshod.diagnosticserviceai.runtime;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.yelshod.diagnosticserviceai.config.AppProperties;
+import java.net.SocketException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
@@ -27,18 +28,42 @@ public class DockerRuntimeDiscoveryService implements RuntimeTargetDiscoveryServ
         try {
             String labelName = appProperties.docker().projectLabel();
             String labelValue = appProperties.docker().projectLabelValue();
+            log.debug("Docker discovery started labelKey={} labelValue={}", labelName, labelValue);
 
-            return dockerClient.listContainersCmd().withShowAll(true).exec().stream()
+            List<RuntimeTargetDto> targets = dockerClient.listContainersCmd().withShowAll(true).exec().stream()
                     .filter(container -> {
                         Map<String, String> labels = container.getLabels();
                         return labels != null && labelValue.equals(labels.get(labelName));
                     })
                     .map(this::toDto)
                     .collect(Collectors.toList());
+            if (targets.isEmpty()) {
+                log.warn("Docker discovery returned no matching containers labelKey={} labelValue={}", labelName, labelValue);
+            } else {
+                log.info("Docker discovery completed matches={}", targets.size());
+            }
+            return targets;
         } catch (RuntimeException ex) {
-            log.error("Docker runtime discovery failed", ex);
+            if (isMissingDockerSocket(ex)) {
+                log.warn("Docker discovery skipped because Docker socket is unavailable");
+                return List.of();
+            }
+            log.warn("Docker discovery unavailable because Docker daemon could not be reached", ex);
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Docker daemon is unavailable", ex);
         }
+    }
+
+    private boolean isMissingDockerSocket(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof SocketException socketException
+                    && socketException.getMessage() != null
+                    && socketException.getMessage().contains("No such file or directory")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private RuntimeTargetDto toDto(Container container) {

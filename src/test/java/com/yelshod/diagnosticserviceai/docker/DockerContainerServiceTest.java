@@ -1,32 +1,28 @@
 package com.yelshod.diagnosticserviceai.docker;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ListContainersCmd;
 import com.yelshod.diagnosticserviceai.config.AppProperties;
+import java.net.SocketException;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 class DockerContainerServiceTest {
 
     @Test
-    void returnsServiceUnavailableWhenDockerDaemonCannotBeReached() {
+    void returnsEmptyListWhenDockerSocketIsUnavailable() throws Exception {
         DockerClient dockerClient = mock(DockerClient.class);
         ListContainersCmd listContainersCmd = mock(ListContainersCmd.class);
         when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
         when(listContainersCmd.withShowAll(true)).thenReturn(listContainersCmd);
-        when(listContainersCmd.exec()).thenThrow(new RuntimeException("boom"));
+        when(listContainersCmd.exec()).thenThrow(new RuntimeException(new SocketException("No such file or directory")));
 
         var service = new DockerContainerService(dockerClient, appProperties());
 
-        assertThatThrownBy(service::listDemoProjectContainers)
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
-                .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(service.listDemoProjectContainers()).isEmpty();
     }
 
     private AppProperties appProperties() {

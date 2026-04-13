@@ -29,20 +29,23 @@ public class LogsWebSocketHandler extends TextWebSocketHandler {
                     .getFirst("containerId");
         }
         if (runtimeTargetId == null || runtimeTargetId.isBlank()) {
+            log.warn("Websocket log stream rejected session={} reason=missing-runtime-target-id", session.getId());
             closeQuietly(session, CloseStatus.BAD_DATA);
             return;
         }
+        log.info("Websocket log stream opened session={} runtimeTargetId={}", session.getId(), runtimeTargetId);
         logStreamSessionService.open(session.getId(), runtimeTargetId, session);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        log.info("Websocket log stream closed session={} status={}", session.getId(), status);
         logStreamSessionService.close(session.getId());
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) {
-        log.warn("WS transport error for session {}", session.getId(), exception);
+        log.error("Websocket transport error session={}", session.getId(), exception);
         closeQuietly(session, CloseStatus.SERVER_ERROR);
     }
 

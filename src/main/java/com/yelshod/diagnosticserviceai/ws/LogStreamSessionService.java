@@ -8,10 +8,12 @@ import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetService;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LogStreamSessionService {
 
@@ -23,6 +25,8 @@ public class LogStreamSessionService {
 
     public void open(String sessionId, String runtimeTargetId, WebSocketSession session) {
         RuntimeTargetDto runtimeTarget = runtimeTargetService.findRequiredTarget(runtimeTargetId);
+        log.debug("Registering websocket session={} runtimeTargetId={} runtimeTargetType={}",
+                sessionId, runtimeTarget.id(), runtimeTarget.type());
         LogSourceSession logSession = logSourceRouter.open(runtimeTarget, line -> {
             wsMessageSender.send(session, logProcessingService.toLogMessage(line));
             logProcessingService.maybeBuildErrorEvent(line, errorEvent -> {
@@ -34,12 +38,14 @@ public class LogStreamSessionService {
             });
         });
         subscriptions.put(sessionId, logSession);
+        log.info("Websocket session registered session={} runtimeTargetId={}", sessionId, runtimeTarget.id());
     }
 
     public void close(String sessionId) {
         LogSourceSession logSession = subscriptions.remove(sessionId);
         if (logSession != null) {
             logSession.close();
+            log.debug("Websocket session subscription closed session={}", sessionId);
         }
     }
 }

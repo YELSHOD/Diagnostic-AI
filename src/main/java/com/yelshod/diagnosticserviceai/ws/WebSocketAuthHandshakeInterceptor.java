@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -17,6 +18,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
 
@@ -35,6 +37,7 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
                 .getQueryParams()
                 .getFirst("token");
         if (token == null || token.isBlank()) {
+            log.warn("Websocket auth rejected reason=missing-token uri={}", request.getURI().getPath());
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
@@ -43,13 +46,16 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
             String subject = jwtService.extractSubject(token);
             Optional<UserEntity> user = userRepository.findById(UUID.fromString(subject));
             if (user.isEmpty() || !jwtService.isTokenValid(token, subject)) {
+                log.warn("Websocket auth rejected reason=invalid-token userId={}", subject);
                 response.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return false;
             }
 
             attributes.put("userId", subject);
+            log.info("Websocket auth accepted userId={}", subject);
             return true;
         } catch (JwtException | IllegalArgumentException ex) {
+            log.warn("Websocket auth rejected reason=token-parse-failed", ex);
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }

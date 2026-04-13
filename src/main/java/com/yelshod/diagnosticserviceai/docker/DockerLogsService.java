@@ -26,6 +26,7 @@ public class DockerLogsService {
     public DockerLogSession streamLogs(String containerId, Consumer<DockerLogLine> consumer) {
         try {
             String service = resolveServiceName(containerId);
+            log.info("Docker log stream opened containerId={} service={}", containerId, service);
             LogContainerResultCallback callback = new LogContainerResultCallback() {
                 @Override
                 public void onNext(Frame frame) {
@@ -48,11 +49,12 @@ public class DockerLogsService {
             return () -> {
                 try {
                     callback.close();
+                    log.info("Docker log stream closed containerId={} service={}", containerId, service);
                 } catch (Exception ignored) {
                 }
             };
         } catch (RuntimeException ex) {
-            log.error("Docker log streaming failed for container {}", containerId, ex);
+            log.error("Docker log streaming failed containerId={}", containerId, ex);
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Docker daemon is unavailable for log streaming",
@@ -70,7 +72,7 @@ public class DockerLogsService {
             }
             return labels.getOrDefault("com.docker.compose.service", response.getName().replaceFirst("^/", ""));
         } catch (RuntimeException ex) {
-            log.error("Docker container inspection failed for {}", containerId, ex);
+            log.error("Docker container inspection failed containerId={}", containerId, ex);
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Docker daemon is unavailable for container inspection",

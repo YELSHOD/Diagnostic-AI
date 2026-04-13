@@ -4,6 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Container;
 import com.yelshod.diagnosticserviceai.api.ProjectContainerDto;
 import com.yelshod.diagnosticserviceai.config.AppProperties;
+import java.net.SocketException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +39,10 @@ public class DockerContainerService {
                     .map(this::toDto)
                     .collect(Collectors.toList());
         } catch (RuntimeException ex) {
+            if (isMissingDockerSocket(ex)) {
+                log.warn("Docker container discovery skipped because Docker socket is unavailable");
+                return List.of();
+            }
             log.error("Docker container discovery failed", ex);
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
@@ -45,6 +50,19 @@ public class DockerContainerService {
                     ex
             );
         }
+    }
+
+    private boolean isMissingDockerSocket(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof SocketException socketException
+                    && socketException.getMessage() != null
+                    && socketException.getMessage().contains("No such file or directory")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     private ProjectContainerDto toDto(Container container) {
