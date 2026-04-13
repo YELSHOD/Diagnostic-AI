@@ -23,4 +23,10 @@ public class DemoScenarioController {
         demoScenarioService.start(scenarioType);
         return ResponseEntity.accepted().body(Map.of("status", "started"));
     }
+
+    @PostMapping("/stop")
+    ResponseEntity<Map<String, String>> stopScenarioStream() {
+        demoScenarioService.stop();
+        return ResponseEntity.accepted().body(Map.of("status", "stopped"));
+    }
 }

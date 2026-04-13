@@ -1,10 +1,13 @@
 package com.yelshod.diagnosticserviceai.demo;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.yelshod.diagnosticserviceai.config.AppProperties;
 import java.nio.file.Path;
@@ -16,7 +19,7 @@ import org.springframework.boot.DefaultApplicationArguments;
 class DemoScenarioServiceTest {
 
     @Test
-    void startsOrdersScenarioAndWritesExpectedOrderedSteps() throws Exception {
+    void startsContinuousOrdersStreamAndWritesExpectedOrderedSteps() throws Exception {
         DemoScenarioWriter writer = mock(DemoScenarioWriter.class);
         AppProperties properties = new AppProperties(
                 null,
@@ -33,6 +36,7 @@ class DemoScenarioServiceTest {
         Executor sameThread = Runnable::run;
         DemoScenarioService service = new DemoScenarioService(properties, writer);
         service.setExecutorForTest(sameThread);
+        service.setMaxBatchesForTest(1);
 
         service.start(DemoScenarioType.ORDERS_HAPPY_PATH);
 
@@ -41,6 +45,8 @@ class DemoScenarioServiceTest {
         inOrder.verify(writer).append(any(Path.class), argThat(line -> line.message().contains("Payment authorized")));
         inOrder.verify(writer).append(any(Path.class), argThat(line -> line.message().contains("Restaurant accepted")));
         inOrder.verify(writer).append(any(Path.class), argThat(line -> line.message().contains("Order delivered")));
+        verify(writer, times(7)).append(any(Path.class), any(DemoScenarioLine.class));
+        assertThat(service.isRunning()).isFalse();
     }
 
     @Test
@@ -86,6 +92,29 @@ class DemoScenarioServiceTest {
 
         new DemoScenarioAutoStarter(properties, service).run(new DefaultApplicationArguments(new String[0]));
 
-        org.mockito.Mockito.verify(service).start(DemoScenarioType.ORDERS_HAPPY_PATH);
+        verify(service).start(DemoScenarioType.ORDERS_HAPPY_PATH);
+    }
+
+    @Test
+    void stopEndsRunningContinuousStream() {
+        DemoScenarioWriter writer = mock(DemoScenarioWriter.class);
+        AppProperties properties = new AppProperties(
+                null,
+                null,
+                null,
+                new AppProperties.Demo(
+                        true,
+                        false,
+                        0L,
+                        "./logs/orders-demo.log",
+                        "./logs/restaurant-demo.log"
+                )
+        );
+        DemoScenarioService service = new DemoScenarioService(properties, writer);
+        service.markRunningForTest();
+
+        service.stop();
+
+        assertThat(service.isRunning()).isFalse();
     }
 }

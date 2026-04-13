@@ -1,7 +1,6 @@
 package com.yelshod.diagnosticserviceai.demo;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -41,5 +40,14 @@ class DemoScenarioControllerTest {
                 .andExpect(jsonPath("$.status").value("started"));
 
         verify(demoScenarioService).start(DemoScenarioType.ORDERS_PAYMENT_DELAY);
+    }
+
+    @Test
+    void stopsRunningDemoScenarioStream() throws Exception {
+        mockMvc.perform(post("/api/demo/scenarios/stop"))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.status").value("stopped"));
+
+        verify(demoScenarioService).stop();
     }
 }
