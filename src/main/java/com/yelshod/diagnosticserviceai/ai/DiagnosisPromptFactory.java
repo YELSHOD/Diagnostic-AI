@@ -53,6 +53,23 @@ public class DiagnosisPromptFactory {
     private final RedactionService redactionService;
     private final ObjectMapper objectMapper;
 
+    public String buildInputJson(AiDiagnosisRequest request) {
+        try {
+            return objectMapper.writeValueAsString(Map.of(
+                    "service", request.service() == null ? "" : request.service(),
+                    "question", redactionService.redact(request.question() == null ? "" : request.question()),
+                    "logLines", request.logLines() == null
+                            ? List.of()
+                            : request.logLines().stream()
+                                    .limit(50)
+                                    .map(redactionService::redact)
+                                    .toList()
+            ));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Unable to build AI diagnosis prompt", e);
+        }
+    }
+
     public String buildInputJson(ErrorEvent event) {
         try {
             return objectMapper.writeValueAsString(Map.of(
