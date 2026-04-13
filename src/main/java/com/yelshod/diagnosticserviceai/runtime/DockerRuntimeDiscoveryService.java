@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class DockerRuntimeDiscoveryService implements RuntimeTargetDiscoveryServ
 
     private final DockerClient dockerClient;
     private final AppProperties appProperties;
+    private final AtomicBoolean missingSocketLogged = new AtomicBoolean(false);
 
     @Override
     public List<RuntimeTargetDto> discover() {
@@ -45,7 +47,11 @@ public class DockerRuntimeDiscoveryService implements RuntimeTargetDiscoveryServ
             return targets;
         } catch (RuntimeException ex) {
             if (isMissingDockerSocket(ex)) {
-                log.warn("Docker discovery skipped because Docker socket is unavailable");
+                if (missingSocketLogged.compareAndSet(false, true)) {
+                    log.info("Docker discovery skipped because Docker socket is unavailable");
+                } else {
+                    log.debug("Docker discovery still skipped because Docker socket is unavailable");
+                }
                 return List.of();
             }
             log.warn("Docker discovery unavailable because Docker daemon could not be reached", ex);

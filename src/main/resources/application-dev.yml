@@ -10,6 +10,8 @@ spring:
 logging:
   file:
     name: ${APP_LOG_FILE:./logs/diagnosticserviceai.log}
+  level:
+    org.apache.hc.client5.http.impl.classic.HttpRequestRetryExec: ERROR
 
 app:
   docker:
@@ -18,9 +20,27 @@ app:
     logs-tail: ${DOCKER_LOGS_TAIL:200}
   runtime:
     default-local-targets:
-      - name: diagnostic-ai-front
+      - name: diagnosticserviceai
         host: localhost
-        port: 5173
-        health-url: http://localhost:5173
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
         log-source-type: FILE_TAIL
-        log-source-ref: ./logs/diagnostic-ai-front.log
+        log-source-ref: ${APP_LOG_FILE:./logs/diagnosticserviceai.log}
+      - name: orders-demo
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
+      - name: restaurant-demo
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}
+  demo:
+    enabled: true
+    auto-start: false
+    step-delay-ms: 900
+    orders-log-file: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
+    restaurant-log-file: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}

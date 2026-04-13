@@ -45,8 +45,39 @@ public class LogsWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) {
+        if (isClientDisconnect(exception)) {
+            log.info("Websocket transport closed session={} reason=client-disconnected message={}",
+                    session.getId(), exception.getMessage());
+            closeQuietly(session, CloseStatus.NORMAL);
+            return;
+        }
         log.error("Websocket transport error session={}", session.getId(), exception);
         closeQuietly(session, CloseStatus.SERVER_ERROR);
+    }
+
+    private boolean isClientDisconnect(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof IOException ioException && hasDisconnectMessage(ioException.getMessage())) {
+                return true;
+            }
+            if (hasDisconnectMessage(current.getMessage())) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    private boolean hasDisconnectMessage(String message) {
+        if (message == null) {
+            return false;
+        }
+        String normalized = message.toLowerCase();
+        return normalized.contains("broken pipe")
+                || normalized.contains("connection reset")
+                || normalized.contains("closed channel")
+                || normalized.contains("forcibly closed");
     }
 
     private void closeQuietly(WebSocketSession session, CloseStatus status) {

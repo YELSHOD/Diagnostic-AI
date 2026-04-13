@@ -26,6 +26,6 @@ class DockerContainerServiceTest {
     }
 
     private AppProperties appProperties() {
-        return new AppProperties(new AppProperties.Docker("ai.project.env", "demo", 200), null, null);
+        return new AppProperties(new AppProperties.Docker("ai.project.env", "demo", 200), null, null, null);
     }
 }

@@ -3,6 +3,7 @@ package com.yelshod.diagnosticserviceai.ws;
 import com.yelshod.diagnosticserviceai.auth.JwtService;
 import com.yelshod.diagnosticserviceai.persistence.entity.UserEntity;
 import com.yelshod.diagnosticserviceai.persistence.repository.UserRepository;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import java.util.Map;
 import java.util.Optional;
@@ -54,8 +55,17 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
             attributes.put("userId", subject);
             log.info("Websocket auth accepted userId={}", subject);
             return true;
+        } catch (ExpiredJwtException ex) {
+            String expiredAt = ex.getClaims() != null && ex.getClaims().getExpiration() != null
+                    ? ex.getClaims().getExpiration().toInstant().toString()
+                    : "unknown";
+            log.warn("Websocket auth rejected reason=token-expired uri={} expiredAt={}",
+                    request.getURI().getPath(), expiredAt);
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return false;
         } catch (JwtException | IllegalArgumentException ex) {
-            log.warn("Websocket auth rejected reason=token-parse-failed", ex);
+            log.warn("Websocket auth rejected reason=token-parse-failed uri={} message={}",
+                    request.getURI().getPath(), ex.getMessage());
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }

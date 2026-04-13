@@ -7,7 +7,8 @@ import java.util.List;
 public record AppProperties(
         Docker docker,
         Gemini gemini,
-        Runtime runtime
+        Runtime runtime,
+        Demo demo
 ) {
 
     public record Docker(
@@ -26,6 +27,15 @@ public record AppProperties(
 
     public record Runtime(
             List<LocalTarget> defaultLocalTargets
+    ) {
+    }
+
+    public record Demo(
+            boolean enabled,
+            boolean autoStart,
+            long stepDelayMs,
+            String ordersLogFile,
+            String restaurantLogFile
     ) {
     }
 

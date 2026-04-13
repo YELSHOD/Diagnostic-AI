@@ -53,3 +53,9 @@ app:
         health-url: http://localhost:8080/actuator/health
         log-source-type: FILE_TAIL
         log-source-ref: ./logs/diagnosticserviceai.log
+  demo:
+    enabled: false
+    auto-start: false
+    step-delay-ms: 900
+    orders-log-file: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
+    restaurant-log-file: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}

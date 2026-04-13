@@ -28,7 +28,28 @@ public class WsMessageSender {
         } catch (JsonProcessingException e) {
             log.warn("Unable to serialize ws message", e);
         } catch (IOException e) {
-            log.warn("Unable to send ws message", e);
+            if (isClientDisconnect(e)) {
+                log.info("Skipping ws send session={} reason=client-disconnected message={}",
+                        session.getId(), e.getMessage());
+                return;
+            }
+            log.warn("Unable to send ws message session={}", session.getId(), e);
         }
+    }
+
+    private boolean isClientDisconnect(IOException exception) {
+        return hasDisconnectMessage(exception.getMessage())
+                || (exception.getCause() != null && hasDisconnectMessage(exception.getCause().getMessage()));
+    }
+
+    private boolean hasDisconnectMessage(String message) {
+        if (message == null) {
+            return false;
+        }
+        String normalized = message.toLowerCase();
+        return normalized.contains("broken pipe")
+                || normalized.contains("connection reset")
+                || normalized.contains("closed channel")
+                || normalized.contains("forcibly closed");
     }
 }
