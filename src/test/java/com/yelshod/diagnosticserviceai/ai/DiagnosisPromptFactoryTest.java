@@ -44,12 +44,26 @@ class DiagnosisPromptFactoryTest {
                 List.of(
                         "2026-04-13T11:21:40Z WARN Docker discovery skipped",
                         "2026-04-13T11:21:41Z ERROR Authorization: secret"
-                ));
+                ),
+                new AiDiagnosisRequest.TimeRange(
+                        "relative",
+                        "Showing: 15m",
+                        Instant.parse("2026-04-13T11:06:00Z"),
+                        Instant.parse("2026-04-13T11:21:00Z")
+                ),
+                "ERROR",
+                "socket"
+        );
 
         String prompt = factory.buildInputJson(request);
 
         assertThat(prompt).contains("diagnosticserviceai");
         assertThat(prompt).contains("Why is this service unstable?");
+        assertThat(prompt).contains("Showing: 15m");
+        assertThat(prompt).contains("\"from\":1776078360.000000000");
+        assertThat(prompt).contains("\"to\":1776079260.000000000");
+        assertThat(prompt).contains("\"levelFilter\":\"ERROR\"");
+        assertThat(prompt).contains("\"textFilter\":\"socket\"");
         assertThat(prompt).contains("Docker discovery skipped");
         assertThat(prompt).contains("[REDACTED]");
         assertThat(prompt).doesNotContain("Authorization: secret");

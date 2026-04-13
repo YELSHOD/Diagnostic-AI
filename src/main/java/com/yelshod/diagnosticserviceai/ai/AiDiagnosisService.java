@@ -39,18 +39,23 @@ public class AiDiagnosisService {
             String prompt = diagnosisPromptFactory.buildInputJson(request);
             String rawText = geminiClient.generateDiagnosisJson(gemini.model(), prompt);
             JsonNode parsed = objectMapper.readTree(rawText);
-            List<String> bullets = new ArrayList<>();
-            if (parsed.path("bullets").isArray()) {
-                parsed.path("bullets").forEach(node -> bullets.add(node.asText()));
-            }
+            List<String> timeline = readStringList(parsed.path("timeline"));
+            List<String> evidence = readStringList(parsed.path("evidence"));
+            List<String> nextChecks = readStringList(parsed.path("nextChecks"));
 
             String summary = parsed.path("summary").isTextual() ? parsed.path("summary").asText() : rawText;
+            String probableRootCause = parsed.path("probableRootCause").isTextual()
+                    ? parsed.path("probableRootCause").asText()
+                    : "";
             AiDiagnosisResponse response = new AiDiagnosisResponse(
                     "gemini",
                     gemini.model(),
                     gemini.promptVersion(),
                     summary,
-                    List.copyOf(bullets),
+                    timeline,
+                    probableRootCause,
+                    evidence,
+                    nextChecks,
                     rawText
             );
             log.info("AI diagnosis completed service={} model={}", request.service(), gemini.model());
@@ -77,5 +82,13 @@ public class AiDiagnosisService {
         } catch (Exception ex) {
             log.warn("Failed to get Gemini diagnosis for cluster {}", clusterKey, ex);
         }
+    }
+
+    private List<String> readStringList(JsonNode node) {
+        List<String> items = new ArrayList<>();
+        if (node.isArray()) {
+            node.forEach(item -> items.add(item.asText()));
+        }
+        return List.copyOf(items);
     }
 }

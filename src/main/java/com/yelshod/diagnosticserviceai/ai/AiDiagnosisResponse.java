@@ -7,7 +7,10 @@ public record AiDiagnosisResponse(
         String model,
         String promptVersion,
         String summary,
-        List<String> bullets,
+        List<String> timeline,
+        String probableRootCause,
+        List<String> evidence,
+        List<String> nextChecks,
         String rawText
 ) {
 }

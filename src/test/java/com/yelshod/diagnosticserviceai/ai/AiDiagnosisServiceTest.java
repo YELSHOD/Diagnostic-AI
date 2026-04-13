@@ -37,7 +37,13 @@ class AiDiagnosisServiceTest {
                 JsonMapper.builder().findAndAddModules().build()
         );
 
-        assertThatThrownBy(() -> service.diagnose(new AiDiagnosisRequest("svc", "why?", List.of("line"))))
+        assertThatThrownBy(() -> service.diagnose(new AiDiagnosisRequest(
+                "svc",
+                "why?",
+                List.of("line"),
+                new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                "",
+                "")))
                 .isInstanceOf(AiDiagnosisDisabledException.class)
                 .hasMessage("Gemini integration is not configured");
     }
@@ -45,7 +51,15 @@ class AiDiagnosisServiceTest {
     @Test
     void mapsGeminiTextIntoStructuredResponse() {
         when(geminiClient.generateDiagnosisJson(anyString(), anyString()))
-                .thenReturn("{\"summary\":\"Likely root cause\",\"bullets\":[\"Observation A\",\"Observation B\"]}");
+                .thenReturn("""
+                        {
+                          "summary":"Likely root cause",
+                          "timeline":["11:20 payment started","11:21 websocket failed"],
+                          "probableRootCause":"Expired JWT during reconnect",
+                          "evidence":["Observation A","Observation B"],
+                          "nextChecks":["Check JWT expiry","Check reconnect handling"]
+                        }
+                        """);
 
         AiDiagnosisService service = new AiDiagnosisService(
                 promptFactory,
@@ -60,13 +74,22 @@ class AiDiagnosisServiceTest {
                 JsonMapper.builder().findAndAddModules().build()
         );
 
-        AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest("svc", "why?", List.of("line")));
+        AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest(
+                "svc",
+                "why?",
+                List.of("line"),
+                new AiDiagnosisRequest.TimeRange("relative", "Showing: 15m", Instant.parse("2026-04-13T11:06:00Z"), Instant.parse("2026-04-13T11:21:00Z")),
+                "ERROR",
+                "jwt"));
 
         assertThat(response.provider()).isEqualTo("gemini");
         assertThat(response.model()).isEqualTo("gemini-2.5-flash");
         assertThat(response.promptVersion()).isEqualTo("v1");
         assertThat(response.summary()).isEqualTo("Likely root cause");
-        assertThat(response.bullets()).containsExactly("Observation A", "Observation B");
+        assertThat(response.timeline()).containsExactly("11:20 payment started", "11:21 websocket failed");
+        assertThat(response.probableRootCause()).isEqualTo("Expired JWT during reconnect");
+        assertThat(response.evidence()).containsExactly("Observation A", "Observation B");
+        assertThat(response.nextChecks()).containsExactly("Check JWT expiry", "Check reconnect handling");
         assertThat(response.rawText()).contains("Likely root cause");
     }
 
@@ -109,7 +132,13 @@ class AiDiagnosisServiceTest {
                 JsonMapper.builder().findAndAddModules().build()
         );
 
-        assertThatThrownBy(() -> service.diagnose(new AiDiagnosisRequest("svc", "why?", List.of("line"))))
+        assertThatThrownBy(() -> service.diagnose(new AiDiagnosisRequest(
+                "svc",
+                "why?",
+                List.of("line"),
+                new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                "",
+                "")))
                 .isInstanceOf(AiDiagnosisProviderException.class)
                 .hasMessage("Gemini request failed");
     }

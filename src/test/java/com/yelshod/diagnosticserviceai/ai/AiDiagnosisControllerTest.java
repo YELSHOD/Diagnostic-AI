@@ -41,17 +41,29 @@ class AiDiagnosisControllerTest {
                         "gemini-2.5-flash",
                         "v1",
                         "Likely root cause",
+                        List.of("11:20 payment started"),
+                        "Expired JWT during reconnect",
                         List.of("Observation A"),
+                        List.of("Check JWT expiry"),
                         "{\"summary\":\"Likely root cause\"}"));
 
         mockMvc.perform(post("/api/ai/diagnose")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new AiDiagnosisRequest("svc", "why?", List.of("line")))))
+                                new AiDiagnosisRequest(
+                                        "svc",
+                                        "why?",
+                                        List.of("line"),
+                                        new AiDiagnosisRequest.TimeRange("relative", "Showing: 15m", null, null),
+                                        "ERROR",
+                                        "jwt"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.provider").value("gemini"))
                 .andExpect(jsonPath("$.summary").value("Likely root cause"))
-                .andExpect(jsonPath("$.bullets[0]").value("Observation A"));
+                .andExpect(jsonPath("$.timeline[0]").value("11:20 payment started"))
+                .andExpect(jsonPath("$.probableRootCause").value("Expired JWT during reconnect"))
+                .andExpect(jsonPath("$.evidence[0]").value("Observation A"))
+                .andExpect(jsonPath("$.nextChecks[0]").value("Check JWT expiry"));
     }
 
     @Test
@@ -62,7 +74,13 @@ class AiDiagnosisControllerTest {
         mockMvc.perform(post("/api/ai/diagnose")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new AiDiagnosisRequest("svc", "why?", List.of("line")))))
+                                new AiDiagnosisRequest(
+                                        "svc",
+                                        "why?",
+                                        List.of("line"),
+                                        new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                                        "",
+                                        ""))))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.message").value("Gemini integration is not configured"));
     }
@@ -75,7 +93,13 @@ class AiDiagnosisControllerTest {
         mockMvc.perform(post("/api/ai/diagnose")
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                new AiDiagnosisRequest("svc", "", List.of()))))
+                                new AiDiagnosisRequest(
+                                        "svc",
+                                        "",
+                                        List.of(),
+                                        new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                                        "",
+                                        ""))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Question or logLines must be provided"));
     }
