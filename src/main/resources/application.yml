@@ -15,6 +15,10 @@ spring:
   flyway:
     enabled: true
 
+logging:
+  file:
+    name: ${APP_LOG_FILE:./logs/diagnosticserviceai.log}
+
 server:
   port: ${SERVER_PORT:8080}
 

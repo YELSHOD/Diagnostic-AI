@@ -7,6 +7,10 @@ spring:
     username: ${DB_USER:diagnostic}
     password: ${DB_PASSWORD:diagnostic}
 
+logging:
+  file:
+    name: ${APP_LOG_FILE:./logs/diagnosticserviceai.log}
+
 app:
   docker:
     project-label: ${DOCKER_PROJECT_LABEL:ai.project.env}

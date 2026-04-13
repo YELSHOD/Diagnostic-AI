@@ -2,7 +2,7 @@
 
 Spring Boot backend for local log aggregation, clustering, analytics, and AI-assisted diagnosis.
 
-## Local Setup
+## Local Setup (Recommended)
 
 1. Copy the example environment file:
 
@@ -11,24 +11,31 @@ cp .env.example .env
 ```
 
 Fill in the values you need on the current device:
-- PostgreSQL host/port/user/password
+- local PostgreSQL host/port/user/password
+- `APP_LOG_FILE` if you want the backend log file somewhere else
 - `DOCKER_HOST` if your machine uses a non-default Docker socket path
 - `GEMINI_API_KEY` from Google AI Studio if you want AI diagnosis enabled
 - any local Docker label settings you use for project discovery
 
-2. Start PostgreSQL only:
-
-```bash
-docker compose up -d postgres
-```
-
-3. Run the backend locally with the dev profile:
+2. Run the backend locally from IntelliJ or terminal with the `dev` profile:
 
 ```bash
 SPRING_PROFILES_ACTIVE=dev ./gradlew bootRun
 ```
 
 Flyway runs automatically on startup and validates the schema through JPA.
+In `dev` profile the backend also writes its own logs to `./logs/diagnosticserviceai.log`, so the `diagnosticserviceai` runtime target can stream logs through `FILE_TAIL` while the app is running from IntelliJ.
+
+## Local PostgreSQL
+
+The preferred workflow is:
+- backend runs from IntelliJ or `bootRun`
+- PostgreSQL runs from your installed local PostgreSQL service
+- Docker stays optional and is only needed when you want Docker container discovery/logs or a disposable database
+
+If your local PostgreSQL does not already have the expected database/user, either:
+- create them manually, or
+- override `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in `.env`
 
 ## Gemini API Key
 
@@ -58,14 +65,15 @@ The app container mounts `/var/run/docker.sock` and defaults `DOCKER_HOST` to `u
 
 ## Profile Split
 
-- `dev` profile: run the app from IntelliJ or `bootRun`, connect to local PostgreSQL on `localhost`
+- `dev` profile: run the app from IntelliJ or `bootRun`, connect to local PostgreSQL on `localhost`, write app logs to `APP_LOG_FILE`
 - `docker` profile: run the app inside Docker, connect to the `postgres` service by container hostname
 
 This keeps local development and container execution cleanly separated.
 
 ## Why This Setup
 
-- every device uses the same PostgreSQL image and credentials shape
+- IntelliJ development no longer depends on rebuilding a Docker image for every backend change
+- local PostgreSQL can be your default database workflow
 - Flyway owns schema creation through versioned SQL migrations
 - `.env` keeps machine-specific values out of committed config
-- `compose.yml` removes manual database setup drift between laptops
+- `compose.yml` remains available when you still want a disposable PostgreSQL container

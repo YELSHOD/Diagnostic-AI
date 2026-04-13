@@ -176,6 +176,18 @@ class AuthSecurityIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(jsonPath("$.user.email").value("fresh-user@example.com"));
     }
 
+    @Test
+    void allowsWebSocketHandshakeRequestToReachWebSocketLayerWithoutBearerToken() throws Exception {
+        mockMvc.perform(get("/ws/logs")
+                        .param("runtimeTargetId", "abc123")
+                        .param("token", "handshake-token")
+                        .header("Connection", "Upgrade")
+                        .header("Upgrade", "websocket")
+                        .header("Sec-WebSocket-Version", "13")
+                        .header("Sec-WebSocket-Key", "dGhlIHNhbXBsZSBub25jZQ=="))
+                .andExpect(status().isBadRequest());
+    }
+
     private UserEntity createUser(String email, String username) {
         RoleEntity role = roleRepository.findByCode("BACKEND").orElseThrow();
         Instant now = Instant.parse("2026-04-10T08:00:00Z");

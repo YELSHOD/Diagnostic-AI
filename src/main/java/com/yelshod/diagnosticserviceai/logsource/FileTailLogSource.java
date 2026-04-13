@@ -8,7 +8,7 @@ import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -23,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 public class FileTailLogSource implements LogSource {
 
+    private static final int INITIAL_HISTORY_LINES = 200;
+
     @Override
     public boolean supports(RuntimeTargetDto target) {
         return target.logSourceType() == LogSourceType.FILE_TAIL;
@@ -36,11 +38,10 @@ public class FileTailLogSource implements LogSource {
         }
 
         Path path = Path.of(pathRef);
-        if (!Files.exists(path)) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Log file does not exist: " + pathRef);
-        }
 
         try {
+            ensureFileExists(path);
+            emitInitialHistory(target, path, consumer);
             RandomAccessFile file = new RandomAccessFile(path.toFile(), "r");
             file.seek(file.length());
 
@@ -61,6 +62,24 @@ public class FileTailLogSource implements LogSource {
             };
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Unable to tail log file: " + pathRef, ex);
+        }
+    }
+
+    private void ensureFileExists(Path path) throws IOException {
+        Path parent = path.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        if (!Files.exists(path)) {
+            Files.createFile(path);
+        }
+    }
+
+    private void emitInitialHistory(RuntimeTargetDto target, Path path, Consumer<DockerLogLine> consumer) throws IOException {
+        List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+        int start = Math.max(0, lines.size() - INITIAL_HISTORY_LINES);
+        for (int index = start; index < lines.size(); index++) {
+            consumer.accept(new DockerLogLine(target.name(), lines.get(index)));
         }
     }
 
