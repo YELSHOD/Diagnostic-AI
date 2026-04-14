@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yelshod.diagnosticserviceai.config.AppProperties;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,20 @@ public class HttpGeminiClient implements GeminiClient {
 
     private final AppProperties appProperties;
     private final DiagnosisPromptFactory diagnosisPromptFactory;
+    private final ChatPromptFactory chatPromptFactory;
     private final ObjectMapper objectMapper;
 
     @Override
     public String generateDiagnosisJson(String model, String prompt) {
+        return generateText(model, diagnosisPromptFactory.buildRequestPayload(prompt));
+    }
+
+    @Override
+    public String generateChatJson(String model, String prompt) {
+        return generateText(model, chatPromptFactory.buildRequestPayload(prompt));
+    }
+
+    private String generateText(String model, Map<String, Object> requestPayload) {
         RestClient client = RestClient.builder()
                 .baseUrl("https://generativelanguage.googleapis.com")
                 .build();
@@ -30,7 +41,7 @@ public class HttpGeminiClient implements GeminiClient {
                             .queryParam("key", appProperties.gemini().apiKey())
                             .build(model))
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(diagnosisPromptFactory.buildRequestPayload(prompt))
+                    .body(requestPayload)
                     .retrieve()
                     .body(JsonNode.class);
 
