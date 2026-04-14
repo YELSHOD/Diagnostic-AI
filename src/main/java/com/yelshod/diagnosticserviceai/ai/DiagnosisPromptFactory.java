@@ -19,6 +19,8 @@ public class DiagnosisPromptFactory {
             Return ONLY valid JSON, no markdown, no extra text.
             Be concise, technical, and actionable.
             If information is insufficient, say so and list what additional data is needed.
+            Use the same natural language as the user's question for all JSON field values.
+            Keep JSON field names in English.
             """;
 
     private static final String USER_PROMPT_TEMPLATE = """
@@ -30,6 +32,9 @@ public class DiagnosisPromptFactory {
             - Treat timestamps as the primary ordering signal.
             - Separate evidence from inference.
             - Answer the user's question directly and concisely.
+            - If the question is in Russian, write summary/timeline/probableRootCause/evidence/nextChecks in Russian.
+            - If the question is in Kazakh, write summary/timeline/probableRootCause/evidence/nextChecks in Kazakh.
+            - Otherwise answer in English.
 
             Schema:
             {

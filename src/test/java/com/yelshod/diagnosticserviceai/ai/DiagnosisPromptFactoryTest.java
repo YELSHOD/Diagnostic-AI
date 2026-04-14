@@ -2,6 +2,7 @@ package com.yelshod.diagnosticserviceai.ai;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.yelshod.diagnosticserviceai.common.RedactionService;
 import com.yelshod.diagnosticserviceai.logs.ErrorEvent;
@@ -67,5 +68,26 @@ class DiagnosisPromptFactoryTest {
         assertThat(prompt).contains("Docker discovery skipped");
         assertThat(prompt).contains("[REDACTED]");
         assertThat(prompt).doesNotContain("Authorization: secret");
+    }
+
+    @Test
+    void instructsModelToAnswerUsingTheQuestionLanguage() {
+        DiagnosisPromptFactory factory = new DiagnosisPromptFactory(
+                new RedactionService(),
+                JsonMapper.builder().findAndAddModules().build());
+        String inputJson = """
+                {"question":"Проанализируй логи ресторана и ответь на русском"}
+                """;
+
+        JsonNode payload = JsonMapper.builder().findAndAddModules().build()
+                .valueToTree(factory.buildRequestPayload(inputJson));
+
+        String systemPrompt = payload.path("systemInstruction")
+                .path("parts").path(0).path("text").asText();
+        String userPrompt = payload.path("contents")
+                .path(0).path("parts").path(0).path("text").asText();
+
+        assertThat(systemPrompt).contains("Use the same natural language as the user's question");
+        assertThat(userPrompt).contains("Russian");
     }
 }
