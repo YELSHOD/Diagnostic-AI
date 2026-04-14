@@ -2,6 +2,7 @@ package com.yelshod.diagnosticserviceai.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yelshod.diagnosticserviceai.config.AppProperties;
 import com.yelshod.diagnosticserviceai.logs.ErrorEvent;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ public class AiDiagnosisService {
         try {
             String prompt = diagnosisPromptFactory.buildInputJson(request);
             String rawText = geminiClient.generateDiagnosisJson(gemini.model(), prompt);
-            JsonNode parsed = objectMapper.readTree(rawText);
+            JsonNode parsed = parseDiagnosisJson(rawText);
             List<String> timeline = readStringList(parsed.path("timeline"));
             List<String> evidence = readStringList(parsed.path("evidence"));
             List<String> nextChecks = readStringList(parsed.path("nextChecks"));
@@ -90,5 +91,40 @@ public class AiDiagnosisService {
             node.forEach(item -> items.add(item.asText()));
         }
         return List.copyOf(items);
+    }
+
+    private JsonNode parseDiagnosisJson(String rawText) throws JsonProcessingException {
+        String normalized = normalizeModelResponse(rawText);
+        try {
+            return objectMapper.readTree(normalized);
+        } catch (JsonProcessingException ex) {
+            return objectMapper.valueToTree(new FallbackDiagnosis(rawText));
+        }
+    }
+
+    private String normalizeModelResponse(String rawText) {
+        String normalized = rawText == null ? "" : rawText.trim();
+        if (normalized.startsWith("```")) {
+            int firstNewline = normalized.indexOf('\n');
+            if (firstNewline >= 0) {
+                normalized = normalized.substring(firstNewline + 1).trim();
+            }
+            if (normalized.endsWith("```")) {
+                normalized = normalized.substring(0, normalized.length() - 3).trim();
+            }
+        }
+        return normalized;
+    }
+
+    private record FallbackDiagnosis(
+            String summary,
+            List<String> timeline,
+            String probableRootCause,
+            List<String> evidence,
+            List<String> nextChecks
+    ) {
+        private FallbackDiagnosis(String rawText) {
+            this(rawText, List.of(), "", List.of(), List.of());
+        }
     }
 }

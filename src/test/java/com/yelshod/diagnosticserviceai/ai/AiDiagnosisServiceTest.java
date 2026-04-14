@@ -94,6 +94,79 @@ class AiDiagnosisServiceTest {
     }
 
     @Test
+    void stripsMarkdownJsonFencesBeforeParsing() {
+        when(geminiClient.generateDiagnosisJson(anyString(), anyString()))
+                .thenReturn("""
+                        ```json
+                        {
+                          "summary":"Likely root cause",
+                          "timeline":["11:20 payment started"],
+                          "probableRootCause":"Expired JWT during reconnect",
+                          "evidence":["Observation A"],
+                          "nextChecks":["Check JWT expiry"]
+                        }
+                        ```
+                        """);
+
+        AiDiagnosisService service = new AiDiagnosisService(
+                promptFactory,
+                geminiClient,
+                persistenceService,
+                new AppProperties(
+                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
+                        new AppProperties.Runtime(List.of()),
+                        new AppProperties.Demo(false, false, 0, "", "")
+                ),
+                JsonMapper.builder().findAndAddModules().build()
+        );
+
+        AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest(
+                "svc",
+                "why?",
+                List.of("line"),
+                new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                "",
+                ""));
+
+        assertThat(response.summary()).isEqualTo("Likely root cause");
+        assertThat(response.timeline()).containsExactly("11:20 payment started");
+        assertThat(response.probableRootCause()).isEqualTo("Expired JWT during reconnect");
+    }
+
+    @Test
+    void fallsBackToRawTextWhenGeminiReturnsPlainTextInsteadOfJson() {
+        when(geminiClient.generateDiagnosisJson(anyString(), anyString()))
+                .thenReturn("Likely root cause is an expired JWT during reconnect.");
+
+        AiDiagnosisService service = new AiDiagnosisService(
+                promptFactory,
+                geminiClient,
+                persistenceService,
+                new AppProperties(
+                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
+                        new AppProperties.Runtime(List.of()),
+                        new AppProperties.Demo(false, false, 0, "", "")
+                ),
+                JsonMapper.builder().findAndAddModules().build()
+        );
+
+        AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest(
+                "svc",
+                "why?",
+                List.of("line"),
+                new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                "",
+                ""));
+
+        assertThat(response.summary()).isEqualTo("Likely root cause is an expired JWT during reconnect.");
+        assertThat(response.timeline()).isEmpty();
+        assertThat(response.evidence()).isEmpty();
+        assertThat(response.nextChecks()).isEmpty();
+    }
+
+    @Test
     void skipsRemoteCallForClusterDiagnosisWhenApiKeyIsBlank() {
         AiDiagnosisService service = new AiDiagnosisService(
                 promptFactory,
