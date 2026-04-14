@@ -38,6 +38,7 @@ class AiDiagnosisServiceTest {
         );
 
         assertThatThrownBy(() -> service.diagnose(new AiDiagnosisRequest(
+                "diagnosis",
                 "svc",
                 "why?",
                 List.of("line"),
@@ -75,6 +76,7 @@ class AiDiagnosisServiceTest {
         );
 
         AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest(
+                "diagnosis",
                 "svc",
                 "why?",
                 List.of("line"),
@@ -122,6 +124,7 @@ class AiDiagnosisServiceTest {
         );
 
         AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest(
+                "diagnosis",
                 "svc",
                 "why?",
                 List.of("line"),
@@ -153,6 +156,7 @@ class AiDiagnosisServiceTest {
         );
 
         AiDiagnosisResponse response = service.diagnose(new AiDiagnosisRequest(
+                "diagnosis",
                 "svc",
                 "why?",
                 List.of("line"),
@@ -206,6 +210,7 @@ class AiDiagnosisServiceTest {
         );
 
         assertThatThrownBy(() -> service.diagnose(new AiDiagnosisRequest(
+                "diagnosis",
                 "svc",
                 "why?",
                 List.of("line"),

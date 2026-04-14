@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record AiDiagnosisRequest(
+        @Pattern(regexp = "diagnosis|product_help") String mode,
         @Size(max = 120) String service,
         @Size(max = 2_000) String question,
         List<@Size(max = 2_000) String> logLines,

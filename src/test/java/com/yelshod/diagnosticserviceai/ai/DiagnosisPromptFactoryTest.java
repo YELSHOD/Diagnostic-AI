@@ -40,6 +40,7 @@ class DiagnosisPromptFactoryTest {
                 new RedactionService(),
                 JsonMapper.builder().findAndAddModules().build());
         AiDiagnosisRequest request = new AiDiagnosisRequest(
+                "diagnosis",
                 "diagnosticserviceai",
                 "Why is this service unstable?",
                 List.of(
@@ -68,6 +69,30 @@ class DiagnosisPromptFactoryTest {
         assertThat(prompt).contains("Docker discovery skipped");
         assertThat(prompt).contains("[REDACTED]");
         assertThat(prompt).doesNotContain("Authorization: secret");
+    }
+
+    @Test
+    void includesProductKnowledgeForProductHelpMode() {
+        DiagnosisPromptFactory factory = new DiagnosisPromptFactory(
+                new RedactionService(),
+                JsonMapper.builder().findAndAddModules().build());
+        AiDiagnosisRequest request = new AiDiagnosisRequest(
+                "product_help",
+                "",
+                "Где поменять пароль?",
+                List.of(),
+                new AiDiagnosisRequest.TimeRange("all", "Showing: All streamed", null, null),
+                "",
+                ""
+        );
+
+        String prompt = factory.buildInputJson(request);
+
+        assertThat(prompt).contains("\"mode\":\"product_help\"");
+        assertThat(prompt).contains("Settings");
+        assertThat(prompt).contains("Account");
+        assertThat(prompt).contains("password updates");
+        assertThat(prompt).contains("Do not invent features");
     }
 
     @Test

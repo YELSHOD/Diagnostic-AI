@@ -14,6 +14,22 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DiagnosisPromptFactory {
 
+    private static final String PRODUCT_KNOWLEDGE = """
+            Product knowledge:
+            - Overview: shows current system activity, exception patterns, and cluster summaries.
+            - Runtime targets: lists Docker targets and local services, and lets the operator open live logs.
+            - Live Logs: streams logs for a selected target, supports text/level/time-range filters, and can run Gemini diagnosis.
+            - Analysis: summarizes realtime cluster updates and current incident patterns.
+            - Settings: changes frontend API/WS connection settings, reconnect behavior, theme, and language. It does not change runtime target ports.
+            - Account: shows user account details and supports password updates inside the account flow.
+            - AI Chat: supports diagnosis questions and product-help questions.
+            - Demo scenarios: backend can generate demo business logs such as orders-demo and restaurant-demo.
+            Constraints:
+            - Do not invent features, pages, or buttons that are not in this product.
+            - If something is not available, say that clearly.
+            - Give direct navigation guidance when asked where to do something.
+            """;
+
     private static final String SYSTEM_PROMPT = """
             You are a senior backend/SRE engineer. Your task is to diagnose software errors from log events.
             Return ONLY valid JSON, no markdown, no extra text.
@@ -55,6 +71,8 @@ public class DiagnosisPromptFactory {
     public String buildInputJson(AiDiagnosisRequest request) {
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
+            String mode = request.mode() == null || request.mode().isBlank() ? "diagnosis" : request.mode();
+            payload.put("mode", mode);
             payload.put("service", request.service() == null ? "" : request.service());
             payload.put("question", redactionService.redact(request.question() == null ? "" : request.question()));
             payload.put("timeRange", buildTimeRangePayload(request.timeRange()));
@@ -66,6 +84,9 @@ public class DiagnosisPromptFactory {
                             .limit(50)
                             .map(redactionService::redact)
                             .toList());
+            if ("product_help".equals(mode)) {
+                payload.put("productKnowledge", PRODUCT_KNOWLEDGE);
+            }
             return objectMapper.writeValueAsString(payload);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Unable to build AI diagnosis prompt", e);

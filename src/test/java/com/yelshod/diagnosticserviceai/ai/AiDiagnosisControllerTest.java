@@ -51,6 +51,7 @@ class AiDiagnosisControllerTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new AiDiagnosisRequest(
+                                        "diagnosis",
                                         "svc",
                                         "why?",
                                         List.of("line"),
@@ -75,6 +76,7 @@ class AiDiagnosisControllerTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new AiDiagnosisRequest(
+                                        "diagnosis",
                                         "svc",
                                         "why?",
                                         List.of("line"),
@@ -94,6 +96,7 @@ class AiDiagnosisControllerTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new AiDiagnosisRequest(
+                                        "diagnosis",
                                         "svc",
                                         "",
                                         List.of(),
