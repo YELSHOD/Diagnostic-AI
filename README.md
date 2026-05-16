@@ -37,6 +37,14 @@ If your local PostgreSQL does not already have the expected database/user, eithe
 - create them manually, or
 - override `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in `.env`
 
+With the `dev` profile, `DB_AUTO_CREATE` defaults to `true`. On startup the app first checks whether the configured PostgreSQL database exists; if it is missing, it connects to the maintenance database from `DB_MAINTENANCE_NAME` (`postgres` by default) and creates `DB_NAME`. After that, Flyway applies all migrations from `src/main/resources/db/migration`.
+
+If your PostgreSQL user cannot create databases, either grant it `CREATEDB`, run once with a superuser such as `postgres`, or create the database manually:
+
+```sql
+CREATE DATABASE diagnostic_ai;
+```
+
 ## Gemini API Key
 
 If you want Gemini-backed diagnosis:

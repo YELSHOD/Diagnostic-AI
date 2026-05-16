@@ -84,6 +84,9 @@ public class DemoScenarioService {
         if ("restaurant-demo".equals(service)) {
             return Path.of(properties.restaurantLogFile());
         }
+        if ("delivery-demo".equals(service)) {
+            return Path.of(properties.deliveryLogFile());
+        }
         return Path.of(properties.ordersLogFile());
     }
 
@@ -104,7 +107,9 @@ public class DemoScenarioService {
                             "Kitchen marked order ready orderId=%s".formatted(orderId)),
                     line(now.plusSeconds(10), "INFO", "orders-demo",
                             "Courier assigned orderId=%s courier=\"Nurlan T.\"".formatted(orderId)),
-                    line(now.plusSeconds(12), "INFO", "orders-demo",
+                    line(now.plusSeconds(11), "INFO", "delivery-demo",
+                            "Courier picked up orderId=%s courier=\"Nurlan T.\" distanceKm=3.8".formatted(orderId)),
+                    line(now.plusSeconds(12), "INFO", "delivery-demo",
                             "Order delivered orderId=%s courier=\"Nurlan T.\"".formatted(orderId))
             );
             case ORDERS_PAYMENT_DELAY -> List.of(
@@ -115,7 +120,9 @@ public class DemoScenarioService {
                     line(now.plusSeconds(4), "INFO", "orders-demo",
                             "Payment authorized orderId=%s paymentId=PAY-%d method=CARD".formatted(orderId, 99000 + sequence)),
                     line(now.plusSeconds(6), "INFO", "restaurant-demo",
-                            "Restaurant accepted orderId=%s etaMinutes=19".formatted(orderId))
+                            "Restaurant accepted orderId=%s etaMinutes=19".formatted(orderId)),
+                    line(now.plusSeconds(8), "INFO", "delivery-demo",
+                            "Courier pool checked orderId=%s availableCouriers=4".formatted(orderId))
             );
             case RESTAURANT_PREP_DELAY -> List.of(
                     line(now, "INFO", "orders-demo",
@@ -127,7 +134,9 @@ public class DemoScenarioService {
                     line(now.plusSeconds(6), "WARN", "restaurant-demo",
                             "Kitchen load elevated restaurantId=RST-14 activeOrders=18"),
                     line(now.plusSeconds(8), "WARN", "restaurant-demo",
-                            "Preparation delayed orderId=%s reason=high-load extraMinutes=12".formatted(orderId))
+                            "Preparation delayed orderId=%s reason=high-load extraMinutes=12".formatted(orderId)),
+                    line(now.plusSeconds(10), "WARN", "delivery-demo",
+                            "Courier assignment waiting orderId=%s reason=restaurant-not-ready".formatted(orderId))
             );
         };
     }

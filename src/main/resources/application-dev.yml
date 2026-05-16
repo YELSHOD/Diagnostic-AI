@@ -4,7 +4,7 @@ spring:
       on-profile: dev
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:diagnostic_ai}}
-    username: ${DB_USER:whoami}
+    username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:123}
 
 logging:
@@ -28,19 +28,26 @@ app:
         log-source-ref: ${APP_LOG_FILE:./logs/diagnosticserviceai.log}
       - name: orders-demo
         host: localhost
-        port: 8081
-        health-url:
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
         log-source-type: FILE_TAIL
         log-source-ref: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
       - name: restaurant-demo
         host: localhost
-        port: 8082
-        health-url:
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
         log-source-type: FILE_TAIL
         log-source-ref: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}
+      - name: delivery-demo
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ${DELIVERY_DEMO_LOG_FILE:./logs/delivery-demo.log}
   demo:
     enabled: true
     auto-start: false
     step-delay-ms: 900
     orders-log-file: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
     restaurant-log-file: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}
+    delivery-log-file: ${DELIVERY_DEMO_LOG_FILE:./logs/delivery-demo.log}

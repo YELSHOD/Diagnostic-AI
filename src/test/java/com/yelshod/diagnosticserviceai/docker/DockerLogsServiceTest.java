@@ -23,7 +23,7 @@ class DockerLogsServiceTest {
 
         var service = new DockerLogsService(
                 dockerClient,
-                new AppProperties(new AppProperties.Docker("ai.project.env", "demo", 200), null, null, null),
+                new AppProperties(new AppProperties.Docker(true, "ai.project.env", "demo", 200), null, null, null),
                 new DockerFrameLogSplitter()
         );
 

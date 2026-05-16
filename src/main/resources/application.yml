@@ -3,7 +3,7 @@ spring:
     name: DiagnosticServiceAI
   datasource:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:diagnostic_ai}}
-    username: ${DB_USER:whoami}
+    username: ${DB_USER:postgres}
     password: ${DB_PASSWORD:123}
   jpa:
     hibernate:
@@ -35,9 +35,13 @@ auth:
     refresh-token-ttl: ${JWT_REFRESH_TOKEN_TTL:P7D}
 
 app:
+  database:
+    auto-create: ${DB_AUTO_CREATE:true}
+    maintenance-database: ${DB_MAINTENANCE_NAME:postgres}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:*}
   docker:
+    enabled: ${DOCKER_DISCOVERY_ENABLED:false}
     project-label: ${DOCKER_PROJECT_LABEL:ai.project.env}
     project-label-value: ${DOCKER_PROJECT_LABEL_VALUE:demo}
     logs-tail: ${DOCKER_LOGS_TAIL:200}
@@ -53,9 +57,28 @@ app:
         health-url: http://localhost:8080/actuator/health
         log-source-type: FILE_TAIL
         log-source-ref: ./logs/diagnosticserviceai.log
+      - name: orders-demo
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
+      - name: restaurant-demo
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}
+      - name: delivery-demo
+        host: localhost
+        port: 8080
+        health-url: http://localhost:8080/actuator/health
+        log-source-type: FILE_TAIL
+        log-source-ref: ${DELIVERY_DEMO_LOG_FILE:./logs/delivery-demo.log}
   demo:
     enabled: false
     auto-start: false
     step-delay-ms: 900
     orders-log-file: ${ORDERS_DEMO_LOG_FILE:./logs/orders-demo.log}
     restaurant-log-file: ${RESTAURANT_DEMO_LOG_FILE:./logs/restaurant-demo.log}
+    delivery-log-file: ${DELIVERY_DEMO_LOG_FILE:./logs/delivery-demo.log}

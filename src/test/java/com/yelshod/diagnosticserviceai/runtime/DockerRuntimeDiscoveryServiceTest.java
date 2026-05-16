@@ -62,6 +62,6 @@ class DockerRuntimeDiscoveryServiceTest {
     }
 
     private AppProperties appProperties() {
-        return new AppProperties(new AppProperties.Docker("ai.project.env", "demo", 200), null, null, null);
+        return new AppProperties(new AppProperties.Docker(true, "ai.project.env", "demo", 200), null, null, null);
     }
 }

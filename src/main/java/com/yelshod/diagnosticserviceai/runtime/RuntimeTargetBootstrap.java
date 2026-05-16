@@ -21,11 +21,6 @@ public class RuntimeTargetBootstrap implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        long existingCount = runtimeTargetRepository.count();
-        if (existingCount > 0) {
-            log.debug("Runtime target bootstrap skipped existingTargets={}", existingCount);
-            return;
-        }
         if (appProperties.runtime() == null || appProperties.runtime().defaultLocalTargets() == null) {
             log.debug("Runtime target bootstrap skipped reason=no-configured-defaults");
             return;
@@ -34,10 +29,16 @@ public class RuntimeTargetBootstrap implements ApplicationRunner {
         log.info("Runtime target bootstrap started configuredTargets={}",
                 appProperties.runtime().defaultLocalTargets().size());
         List<RuntimeTargetEntity> seeds = appProperties.runtime().defaultLocalTargets().stream()
-                .map(this::toEntity)
+                .map(target -> runtimeTargetRepository.findByName(target.name())
+                        .map(entity -> updateEntity(entity, target))
+                        .orElseGet(() -> toEntity(target)))
                 .toList();
+        if (seeds.isEmpty()) {
+            log.debug("Runtime target bootstrap skipped reason=all-defaults-exist");
+            return;
+        }
         runtimeTargetRepository.saveAll(seeds);
-        log.info("Runtime target bootstrap inserted targets count={}", seeds.size());
+        log.info("Runtime target bootstrap upserted targets count={}", seeds.size());
     }
 
     private RuntimeTargetEntity toEntity(AppProperties.LocalTarget target) {
@@ -55,5 +56,17 @@ public class RuntimeTargetBootstrap implements ApplicationRunner {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
+    }
+
+    private RuntimeTargetEntity updateEntity(RuntimeTargetEntity entity, AppProperties.LocalTarget target) {
+        entity.setType(RuntimeTargetType.LOCAL_SERVICE);
+        entity.setHost(target.host());
+        entity.setPort(target.port());
+        entity.setHealthUrl(target.healthUrl());
+        entity.setLogSourceType(LogSourceType.valueOf(target.logSourceType().toUpperCase(Locale.ROOT)));
+        entity.setLogSourceRef(target.logSourceRef());
+        entity.setEnabled(true);
+        entity.setUpdatedAt(Instant.now());
+        return entity;
     }
 }

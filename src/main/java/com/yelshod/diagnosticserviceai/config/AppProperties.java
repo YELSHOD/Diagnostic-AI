@@ -12,6 +12,7 @@ public record AppProperties(
 ) {
 
     public record Docker(
+            boolean enabled,
             String projectLabel,
             String projectLabelValue,
             int logsTail
@@ -35,7 +36,8 @@ public record AppProperties(
             boolean autoStart,
             long stepDelayMs,
             String ordersLogFile,
-            String restaurantLogFile
+            String restaurantLogFile,
+            String deliveryLogFile
     ) {
     }
 

@@ -6,3 +6,6 @@ spring:
     url: ${DB_URL:jdbc:postgresql://postgres:${DB_PORT:5432}/${DB_NAME:diagnostic_ai}}
     username: ${DB_USER:diagnostic}
     password: ${DB_PASSWORD:diagnostic}
+app:
+  docker:
+    enabled: ${DOCKER_DISCOVERY_ENABLED:true}

@@ -30,7 +30,8 @@ class DemoScenarioServiceTest {
                         false,
                         0L,
                         "./logs/orders-demo.log",
-                        "./logs/restaurant-demo.log"
+                        "./logs/restaurant-demo.log",
+                        "./logs/delivery-demo.log"
                 )
         );
         Executor sameThread = Runnable::run;
@@ -45,7 +46,7 @@ class DemoScenarioServiceTest {
         inOrder.verify(writer).append(any(Path.class), argThat(line -> line.message().contains("Payment authorized")));
         inOrder.verify(writer).append(any(Path.class), argThat(line -> line.message().contains("Restaurant accepted")));
         inOrder.verify(writer).append(any(Path.class), argThat(line -> line.message().contains("Order delivered")));
-        verify(writer, times(7)).append(any(Path.class), any(DemoScenarioLine.class));
+        verify(writer, times(8)).append(any(Path.class), any(DemoScenarioLine.class));
         assertThat(service.isRunning()).isFalse();
     }
 
@@ -61,7 +62,8 @@ class DemoScenarioServiceTest {
                         false,
                         0L,
                         "./logs/orders-demo.log",
-                        "./logs/restaurant-demo.log"
+                        "./logs/restaurant-demo.log",
+                        "./logs/delivery-demo.log"
                 )
         );
         Executor neverRuns = command -> { };
@@ -86,7 +88,8 @@ class DemoScenarioServiceTest {
                         true,
                         0L,
                         "./logs/orders-demo.log",
-                        "./logs/restaurant-demo.log"
+                        "./logs/restaurant-demo.log",
+                        "./logs/delivery-demo.log"
                 )
         );
 
@@ -107,7 +110,8 @@ class DemoScenarioServiceTest {
                         false,
                         0L,
                         "./logs/orders-demo.log",
-                        "./logs/restaurant-demo.log"
+                        "./logs/restaurant-demo.log",
+                        "./logs/delivery-demo.log"
                 )
         );
         DemoScenarioService service = new DemoScenarioService(properties, writer);

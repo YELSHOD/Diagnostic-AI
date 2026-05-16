@@ -29,10 +29,10 @@ class AiDiagnosisServiceTest {
                 geminiClient,
                 persistenceService,
                 new AppProperties(
-                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Docker(true, "label", "value", 100),
                         new AppProperties.Gemini("", "gemini-2.5-flash", "v1"),
                         new AppProperties.Runtime(List.of()),
-                        new AppProperties.Demo(false, false, 0, "", "")
+                        new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
                 JsonMapper.builder().findAndAddModules().build()
         );
@@ -67,10 +67,10 @@ class AiDiagnosisServiceTest {
                 geminiClient,
                 persistenceService,
                 new AppProperties(
-                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Docker(true, "label", "value", 100),
                         new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
                         new AppProperties.Runtime(List.of()),
-                        new AppProperties.Demo(false, false, 0, "", "")
+                        new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
                 JsonMapper.builder().findAndAddModules().build()
         );
@@ -115,10 +115,10 @@ class AiDiagnosisServiceTest {
                 geminiClient,
                 persistenceService,
                 new AppProperties(
-                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Docker(true, "label", "value", 100),
                         new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
                         new AppProperties.Runtime(List.of()),
-                        new AppProperties.Demo(false, false, 0, "", "")
+                        new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
                 JsonMapper.builder().findAndAddModules().build()
         );
@@ -147,10 +147,10 @@ class AiDiagnosisServiceTest {
                 geminiClient,
                 persistenceService,
                 new AppProperties(
-                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Docker(true, "label", "value", 100),
                         new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
                         new AppProperties.Runtime(List.of()),
-                        new AppProperties.Demo(false, false, 0, "", "")
+                        new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
                 JsonMapper.builder().findAndAddModules().build()
         );
@@ -177,10 +177,10 @@ class AiDiagnosisServiceTest {
                 geminiClient,
                 persistenceService,
                 new AppProperties(
-                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Docker(true, "label", "value", 100),
                         new AppProperties.Gemini("", "gemini-2.5-flash", "v1"),
                         new AppProperties.Runtime(List.of()),
-                        new AppProperties.Demo(false, false, 0, "", "")
+                        new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
                 JsonMapper.builder().findAndAddModules().build()
         );
@@ -201,10 +201,10 @@ class AiDiagnosisServiceTest {
                 geminiClient,
                 persistenceService,
                 new AppProperties(
-                        new AppProperties.Docker("label", "value", 100),
+                        new AppProperties.Docker(true, "label", "value", 100),
                         new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
                         new AppProperties.Runtime(List.of()),
-                        new AppProperties.Demo(false, false, 0, "", "")
+                        new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
                 JsonMapper.builder().findAndAddModules().build()
         );

@@ -38,3 +38,6 @@ out/
 
 ### Local env ###
 .env
+
+### Runtime logs ###
+logs/

@@ -27,6 +27,11 @@ public class DockerRuntimeDiscoveryService implements RuntimeTargetDiscoveryServ
 
     @Override
     public List<RuntimeTargetDto> discover() {
+        if (!appProperties.docker().enabled()) {
+            log.debug("Docker discovery skipped because it is disabled");
+            return List.of();
+        }
+
         try {
             String labelName = appProperties.docker().projectLabel();
             String labelValue = appProperties.docker().projectLabelValue();
@@ -64,7 +69,8 @@ public class DockerRuntimeDiscoveryService implements RuntimeTargetDiscoveryServ
         while (current != null) {
             if (current instanceof SocketException socketException
                     && socketException.getMessage() != null
-                    && socketException.getMessage().contains("No such file or directory")) {
+                    && (socketException.getMessage().contains("No such file or directory")
+                    || socketException.getMessage().contains("Network is down"))) {
                 return true;
             }
             current = current.getCause();
