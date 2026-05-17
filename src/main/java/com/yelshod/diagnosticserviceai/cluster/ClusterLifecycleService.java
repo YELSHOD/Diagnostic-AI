@@ -4,6 +4,7 @@ import com.yelshod.diagnosticserviceai.logs.ErrorEvent;
 import com.yelshod.diagnosticserviceai.persistence.entity.ClusterEntity;
 import com.yelshod.diagnosticserviceai.persistence.repository.ClusterRepository;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,10 @@ public class ClusterLifecycleService {
     private final ClusterRepository clusterRepository;
 
     public ClusterLifecycleResult upsert(String clusterKey, ErrorEvent event) {
+        return upsert(clusterKey, event, null);
+    }
+
+    public ClusterLifecycleResult upsert(String clusterKey, ErrorEvent event, UUID projectId) {
         Instant now = Instant.now();
         ClusterEntity cluster = clusterRepository.findById(clusterKey).orElse(null);
         boolean isNew = cluster == null;
@@ -21,6 +26,7 @@ public class ClusterLifecycleService {
         if (isNew) {
             cluster = ClusterEntity.builder()
                     .clusterKey(clusterKey)
+                    .projectId(projectId)
                     .service(event.service())
                     .title(event.exceptionType())
                     .severity("high")

@@ -1,6 +1,7 @@
 package com.yelshod.diagnosticserviceai.ws;
 
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -58,7 +59,13 @@ public class LogsWebSocketHandler extends TextWebSocketHandler {
     private boolean isClientDisconnect(Throwable throwable) {
         Throwable current = throwable;
         while (current != null) {
+            if (current instanceof ClosedChannelException) {
+                return true;
+            }
             if (current instanceof IOException ioException && hasDisconnectMessage(ioException.getMessage())) {
+                return true;
+            }
+            if (current instanceof IOException) {
                 return true;
             }
             if (hasDisconnectMessage(current.getMessage())) {
@@ -77,7 +84,9 @@ public class LogsWebSocketHandler extends TextWebSocketHandler {
         return normalized.contains("broken pipe")
                 || normalized.contains("connection reset")
                 || normalized.contains("closed channel")
-                || normalized.contains("forcibly closed");
+                || normalized.contains("forcibly closed")
+                || normalized.contains("разорвала")
+                || normalized.contains("установленное подключение");
     }
 
     private void closeQuietly(WebSocketSession session, CloseStatus status) {

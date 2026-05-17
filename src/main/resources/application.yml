@@ -49,6 +49,7 @@ app:
     api-key: ${GEMINI_API_KEY:}
     model: ${GEMINI_MODEL:gemini-2.5-flash}
     prompt-version: ${GEMINI_PROMPT_VERSION:v1}
+    auto-diagnosis-enabled: ${GEMINI_AUTO_DIAGNOSIS_ENABLED:false}
   runtime:
     default-local-targets:
       - name: diagnosticserviceai

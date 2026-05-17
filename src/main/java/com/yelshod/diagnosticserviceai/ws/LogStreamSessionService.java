@@ -3,6 +3,7 @@ package com.yelshod.diagnosticserviceai.ws;
 import com.yelshod.diagnosticserviceai.logsource.LogSourceRouter;
 import com.yelshod.diagnosticserviceai.logsource.LogSourceSession;
 import com.yelshod.diagnosticserviceai.logs.LogProcessingService;
+import com.yelshod.diagnosticserviceai.runtime.LogSourceType;
 import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetDto;
 import com.yelshod.diagnosticserviceai.runtime.RuntimeTargetService;
 import java.util.Map;
@@ -29,6 +30,11 @@ public class LogStreamSessionService {
                 sessionId, runtimeTarget.id(), runtimeTarget.type());
         LogSourceSession logSession = logSourceRouter.open(runtimeTarget, line -> {
             wsMessageSender.send(session, logProcessingService.toLogMessage(line));
+            if (runtimeTarget.logSourceType() == LogSourceType.HTTP_INGEST) {
+                logProcessingService.toHttpIngestErrorMessage(line)
+                        .ifPresent(message -> wsMessageSender.send(session, message));
+                return;
+            }
             logProcessingService.maybeBuildErrorEvent(line, errorEvent -> {
                 wsMessageSender.send(session, logProcessingService.toErrorMessage(errorEvent));
                 wsMessageSender.send(session, logProcessingService.toClusterUpdate(errorEvent));

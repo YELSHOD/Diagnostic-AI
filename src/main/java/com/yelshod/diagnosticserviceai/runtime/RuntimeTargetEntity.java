@@ -26,6 +26,9 @@ public class RuntimeTargetEntity {
     @Id
     private UUID id;
 
+    @Column(name = "project_id")
+    private UUID projectId;
+
     @Column(nullable = false, length = 120)
     private String name;
 

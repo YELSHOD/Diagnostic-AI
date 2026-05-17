@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +24,9 @@ public class ClusterEntity {
     @Id
     @Column(name = "cluster_key", nullable = false, length = 512)
     private String clusterKey;
+
+    @Column(name = "project_id")
+    private UUID projectId;
 
     @Column(nullable = false)
     private String service;

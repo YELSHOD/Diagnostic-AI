@@ -10,4 +10,6 @@ public interface RuntimeTargetRepository extends JpaRepository<RuntimeTargetEnti
     List<RuntimeTargetEntity> findAllByEnabledTrueOrderByNameAsc();
 
     Optional<RuntimeTargetEntity> findByName(String name);
+
+    Optional<RuntimeTargetEntity> findByProjectIdAndName(UUID projectId, String name);
 }

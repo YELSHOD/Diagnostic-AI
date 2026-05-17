@@ -22,7 +22,8 @@ public record AppProperties(
     public record Gemini(
             String apiKey,
             String model,
-            String promptVersion
+            String promptVersion,
+            boolean autoDiagnosisEnabled
     ) {
     }
 

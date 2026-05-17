@@ -2,6 +2,7 @@ package com.yelshod.diagnosticserviceai.runtime;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.time.Clock;
@@ -106,16 +107,23 @@ public class RuntimeTargetService {
     }
 
     private RuntimeTargetDto toDto(RuntimeTargetEntity entity) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("source", "database");
+        if (entity.getProjectId() != null) {
+            metadata.put("projectId", entity.getProjectId().toString());
+        }
         return new RuntimeTargetDto(
                 entity.getId().toString(),
                 entity.getName(),
                 entity.getType(),
-                RuntimeTargetStatus.UNKNOWN,
+                entity.getLogSourceType() == LogSourceType.HTTP_INGEST
+                        ? RuntimeTargetStatus.UP
+                        : RuntimeTargetStatus.UNKNOWN,
                 entity.getHost(),
                 entity.getPort(),
                 entity.getHealthUrl(),
                 entity.getLogSourceType(),
                 entity.getLogSourceRef(),
-                Map.of("source", "database"));
+                metadata);
     }
 }

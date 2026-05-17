@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(registry -> registry
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/demo/scenarios/**", "/actuator/health", "/error", "/ws/**")
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/refresh", "/api/demo/scenarios/**", "/api/public/logs", "/actuator/health", "/error", "/ws/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())

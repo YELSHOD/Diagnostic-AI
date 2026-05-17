@@ -62,7 +62,7 @@ public class AiDiagnosisService {
             log.info("AI diagnosis completed service={} model={}", request.service(), gemini.model());
             return response;
         } catch (AiDiagnosisProviderException ex) {
-            log.error("AI diagnosis provider call failed model={}", gemini.model(), ex);
+            log.warn("AI diagnosis provider call failed model={} message={}", gemini.model(), ex.getMessage());
             throw ex;
         } catch (Exception ex) {
             log.error("AI diagnosis provider call failed model={}", gemini.model(), ex);
@@ -80,8 +80,11 @@ public class AiDiagnosisService {
             String prompt = diagnosisPromptFactory.buildInputJson(event);
             String diagnosisJson = geminiClient.generateDiagnosisJson(gemini.model(), prompt);
             aiDiagnosisPersistenceService.save(clusterKey, gemini.model(), gemini.promptVersion(), diagnosisJson);
+        } catch (AiDiagnosisProviderException ex) {
+            log.warn("Auto Gemini diagnosis skipped clusterKey={} message={}", clusterKey, ex.getMessage());
         } catch (Exception ex) {
-            log.warn("Failed to get Gemini diagnosis for cluster {}", clusterKey, ex);
+            log.warn("Auto Gemini diagnosis failed clusterKey={} message={}", clusterKey, ex.getMessage());
+            log.debug("Auto Gemini diagnosis failure details clusterKey={}", clusterKey, ex);
         }
     }
 

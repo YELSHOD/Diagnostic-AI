@@ -50,6 +50,8 @@ public class WsMessageSender {
         return normalized.contains("broken pipe")
                 || normalized.contains("connection reset")
                 || normalized.contains("closed channel")
-                || normalized.contains("forcibly closed");
+                || normalized.contains("forcibly closed")
+                || normalized.contains("разорвала")
+                || normalized.contains("установленное подключение");
     }
 }

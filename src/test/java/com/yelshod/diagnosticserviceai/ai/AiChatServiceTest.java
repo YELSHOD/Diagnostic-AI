@@ -25,7 +25,7 @@ class AiChatServiceTest {
                 geminiClient,
                 new AppProperties(
                         new AppProperties.Docker(true, "label", "value", 100),
-                        new AppProperties.Gemini("", "gemini-2.5-flash", "v1"),
+                        new AppProperties.Gemini("", "gemini-2.5-flash", "v1", false),
                         new AppProperties.Runtime(List.of()),
                         new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
@@ -53,7 +53,7 @@ class AiChatServiceTest {
                 geminiClient,
                 new AppProperties(
                         new AppProperties.Docker(true, "label", "value", 100),
-                        new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
+                        new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1", false),
                         new AppProperties.Runtime(List.of()),
                         new AppProperties.Demo(false, false, 0, "", "", "")
                 ),
@@ -81,7 +81,7 @@ class AiChatServiceTest {
                 geminiClient,
                 new AppProperties(
                         new AppProperties.Docker(true, "label", "value", 100),
-                        new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1"),
+                        new AppProperties.Gemini("secret", "gemini-2.5-flash", "v1", false),
                         new AppProperties.Runtime(List.of()),
                         new AppProperties.Demo(false, false, 0, "", "", "")
                 ),

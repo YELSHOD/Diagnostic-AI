@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Component
 @RequiredArgsConstructor
@@ -48,6 +49,8 @@ public class HttpGeminiClient implements GeminiClient {
             return extractModelText(response);
         } catch (AiDiagnosisProviderException ex) {
             throw ex;
+        } catch (HttpClientErrorException.TooManyRequests ex) {
+            throw new AiDiagnosisProviderException("Gemini quota exceeded. Wait a bit or disable auto diagnosis.", ex);
         } catch (Exception ex) {
             throw new AiDiagnosisProviderException("Gemini request failed", ex);
         }

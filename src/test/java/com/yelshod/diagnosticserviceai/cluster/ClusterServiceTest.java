@@ -46,12 +46,12 @@ class ClusterServiceTest {
 
         when(clusterKeyFactory.build("IllegalStateException", "OrdersService.placeOrder", "boom"))
                 .thenReturn("cluster-1");
-        when(clusterLifecycleService.upsert("cluster-1", event))
+        when(clusterLifecycleService.upsert("cluster-1", event, null))
                 .thenReturn(new ClusterLifecycleResult("cluster-1", "orders", 2L, false));
 
         clusterService.processEvent(event);
 
-        verify(incidentRecorder).record("cluster-1", event);
+        verify(incidentRecorder).record("cluster-1", event, null);
         verify(diagnosisTrigger, never()).diagnoseNewCluster(any(), any());
     }
 }
